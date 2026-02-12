@@ -1,9 +1,0 @@
-services:
-  reactolith.twig_extension:
-    class: Reactolith\SymfonyBundle\Twig\ReactolithTwigExtension
-    tags:
-      - { name: twig.extension }
-
-  Reactolith\SymfonyBundle\Form\Type\SwitchType:
-    tags:
-      - { name: form.type }
