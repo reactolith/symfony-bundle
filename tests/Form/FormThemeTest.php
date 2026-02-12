@@ -54,9 +54,7 @@ class FormThemeTest extends TestCase
         $this->twig->addExtension(new TranslationExtension(new IdentityTranslator()));
 
         // Add Reactolith Twig extension
-        $this->twig->addExtension(new ReactolithTwigExtension([
-            'tag_prefix' => 'ui-',
-        ]));
+        $this->twig->addExtension(new ReactolithTwigExtension());
 
         // Set up the form renderer engine
         $rendererEngine = new TwigRendererEngine([

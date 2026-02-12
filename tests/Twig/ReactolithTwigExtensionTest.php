@@ -4,7 +4,6 @@ namespace Reactolith\SymfonyBundle\Tests\Twig;
 
 use PHPUnit\Framework\TestCase;
 use Reactolith\SymfonyBundle\Twig\ReactolithTwigExtension;
-use Reactolith\SymfonyBundle\Vite\ViteAssetResolver;
 
 class ReactolithTwigExtensionTest extends TestCase
 {
@@ -12,12 +11,8 @@ class ReactolithTwigExtensionTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->extension = new ReactolithTwigExtension([
-            'tag_prefix' => 'ui-',
-        ]);
+        $this->extension = new ReactolithTwigExtension();
     }
-
-    // --- renderAttributes (filter + function) ---
 
     public function testAttrsWithStringValue(): void
     {
@@ -115,9 +110,7 @@ class ReactolithTwigExtensionTest extends TestCase
         $this->assertStringContainsString("it&#039;s", $result);
     }
 
-    // --- getFilters / getFunctions ---
-
-    public function testProvidesFilterAndFunctions(): void
+    public function testProvidesFilterAndFunction(): void
     {
         $filters = $this->extension->getFilters();
         $functions = $this->extension->getFunctions();
@@ -125,57 +118,7 @@ class ReactolithTwigExtensionTest extends TestCase
         $this->assertCount(1, $filters);
         $this->assertSame('re_attrs', $filters[0]->getName());
 
-        $this->assertCount(3, $functions);
-        $names = array_map(fn ($f) => $f->getName(), $functions);
-        $this->assertContains('re_attrs', $names);
-        $this->assertContains('re_scripts', $names);
-        $this->assertContains('re_styles', $names);
-    }
-
-    // --- Vite helpers ---
-
-    public function testRenderScriptsWithoutViteReturnsEmpty(): void
-    {
-        $result = $this->extension->renderScripts();
-
-        $this->assertSame('', $result);
-    }
-
-    public function testRenderStylesWithoutViteReturnsEmpty(): void
-    {
-        $result = $this->extension->renderStyles();
-
-        $this->assertSame('', $result);
-    }
-
-    public function testRenderScriptsWithViteDevServer(): void
-    {
-        $resolver = new ViteAssetResolver('/tmp/fake-project', [
-            'enabled' => true,
-            'build_directory' => 'build',
-            'entry_points' => ['resources/js/app.js'],
-            'dev_server_url' => 'http://localhost:5173',
-        ]);
-
-        $extension = new ReactolithTwigExtension([], $resolver);
-        $result = $extension->renderScripts();
-
-        $this->assertStringContainsString('<script type="module" src="http://localhost:5173/@vite/client"></script>', $result);
-        $this->assertStringContainsString('<script type="module" src="http://localhost:5173/resources/js/app.js"></script>', $result);
-    }
-
-    public function testRenderStylesWithViteDevServerReturnsEmpty(): void
-    {
-        $resolver = new ViteAssetResolver('/tmp/fake-project', [
-            'enabled' => true,
-            'build_directory' => 'build',
-            'entry_points' => ['resources/js/app.js'],
-            'dev_server_url' => 'http://localhost:5173',
-        ]);
-
-        $extension = new ReactolithTwigExtension([], $resolver);
-        $result = $extension->renderStyles();
-
-        $this->assertSame('', $result);
+        $this->assertCount(1, $functions);
+        $this->assertSame('re_attrs', $functions[0]->getName());
     }
 }

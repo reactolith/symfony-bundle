@@ -1,8 +1,6 @@
 services:
   reactolith.twig_extension:
     class: Reactolith\SymfonyBundle\Twig\ReactolithTwigExtension
-    arguments:
-      $config: []
     tags:
       - { name: twig.extension }
 

@@ -1,6 +1,6 @@
 {
     "name": "reactolith/symfony-bundle",
-    "description": "Symfony integration for Reactolith – server-side HTML hydration with React/shadcn components. Includes Twig form theme, Vite integration, and HTTP/2 component preloading.",
+    "description": "Symfony integration for Reactolith – Twig form theme, attribute helper, and HTTP/2 component preloading.",
     "type": "symfony-bundle",
     "license": "MIT",
     "keywords": [
@@ -24,6 +24,9 @@
         "symfony/http-kernel": "^6.4 || ^7.0",
         "symfony/phpunit-bridge": "^6.4 || ^7.0",
         "symfony/translation": "^6.4 || ^7.0 || ^8.0"
+    },
+    "suggest": {
+        "pentatrion/vite-bundle": "Recommended for Vite asset integration (vite_entry_script_tags / vite_entry_link_tags)"
     },
     "autoload": {
         "psr-4": {

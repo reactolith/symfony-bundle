@@ -2,19 +2,12 @@
 
 namespace Reactolith\SymfonyBundle\Twig;
 
-use Reactolith\SymfonyBundle\Vite\ViteAssetResolver;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 class ReactolithTwigExtension extends AbstractExtension
 {
-    public function __construct(
-        private array $config = [],
-        private ?ViteAssetResolver $viteResolver = null,
-    ) {
-    }
-
     public function getFilters(): array
     {
         return [
@@ -26,8 +19,6 @@ class ReactolithTwigExtension extends AbstractExtension
     {
         return [
             new TwigFunction('re_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
-            new TwigFunction('re_scripts', $this->renderScripts(...), ['is_safe' => ['html']]),
-            new TwigFunction('re_styles', $this->renderStyles(...), ['is_safe' => ['html']]),
         ];
     }
 
@@ -71,23 +62,5 @@ class ReactolithTwigExtension extends AbstractExtension
         }
 
         return implode(' ', $parts);
-    }
-
-    public function renderScripts(): string
-    {
-        if ($this->viteResolver === null) {
-            return '';
-        }
-
-        return $this->viteResolver->getScriptTags();
-    }
-
-    public function renderStyles(): string
-    {
-        if ($this->viteResolver === null) {
-            return '';
-        }
-
-        return $this->viteResolver->getStyleTags();
     }
 }
