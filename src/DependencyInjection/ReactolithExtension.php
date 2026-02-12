@@ -27,7 +27,7 @@ class ReactolithExtension extends Extension implements PrependExtensionInterface
         // Register tag_prefix as Twig global
         $container->prependExtensionConfig('twig', [
             'globals' => [
-                'reactolith_tag_prefix' => $config['tag_prefix'] ?? 'ui-',
+                'reactolith_tag_prefix' => $config['tag_prefix'],
             ],
         ]);
     }

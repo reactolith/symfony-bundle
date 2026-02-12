@@ -4,6 +4,7 @@ namespace Reactolith\SymfonyBundle\Tests\Twig;
 
 use PHPUnit\Framework\TestCase;
 use Reactolith\SymfonyBundle\Twig\ReactolithTwigExtension;
+use Reactolith\SymfonyBundle\Vite\ViteAssetResolver;
 
 class ReactolithTwigExtensionTest extends TestCase
 {
@@ -12,186 +13,169 @@ class ReactolithTwigExtensionTest extends TestCase
     protected function setUp(): void
     {
         $this->extension = new ReactolithTwigExtension([
-            'root_selector' => '#reactolith',
             'tag_prefix' => 'ui-',
-            'mercure' => [
-                'enabled' => false,
-                'hub_url' => null,
-                'with_credentials' => false,
-            ],
         ]);
     }
 
-    public function testRootOpenWithoutOptions(): void
+    // --- renderAttributes (filter + function) ---
+
+    public function testAttrsWithStringValue(): void
     {
-        $html = $this->extension->rootOpen();
-
-        $this->assertStringContainsString('<div', $html);
-        $this->assertStringContainsString('id="reactolith"', $html);
-    }
-
-    public function testRootOpenWithCustomOptions(): void
-    {
-        $html = $this->extension->rootOpen(['id' => 'custom', 'class' => 'my-class']);
-
-        $this->assertStringContainsString('id="custom"', $html);
-        $this->assertStringContainsString('class="my-class"', $html);
-    }
-
-    public function testRootOpenWithMercureConfig(): void
-    {
-        $extension = new ReactolithTwigExtension([
-            'root_selector' => '#reactolith',
-            'tag_prefix' => 'ui-',
-            'mercure' => [
-                'enabled' => true,
-                'hub_url' => 'https://example.com/.well-known/mercure',
-                'with_credentials' => true,
-            ],
-        ]);
-
-        $html = $extension->rootOpen();
-
-        $this->assertStringContainsString('data-mercure-hub-url="https://example.com/.well-known/mercure"', $html);
-        $this->assertStringContainsString('data-mercure-with-credentials', $html);
-    }
-
-    public function testRootOpenWithMercureDisabled(): void
-    {
-        $html = $this->extension->rootOpen();
-
-        $this->assertStringNotContainsString('data-mercure', $html);
-    }
-
-    public function testRootClose(): void
-    {
-        $html = $this->extension->rootClose();
-
-        $this->assertSame('</div>', $html);
-    }
-
-    public function testAttrWithStringValue(): void
-    {
-        $result = $this->extension->attr('name', 'value');
+        $result = $this->extension->renderAttributes(['name' => 'value']);
 
         $this->assertSame('name="value"', $result);
     }
 
-    public function testAttrWithBooleanTrue(): void
+    public function testAttrsWithMultipleStringValues(): void
     {
-        $result = $this->extension->attr('disabled', true);
+        $result = $this->extension->renderAttributes([
+            'variant' => 'outline',
+            'size' => 'lg',
+        ]);
+
+        $this->assertSame('variant="outline" size="lg"', $result);
+    }
+
+    public function testAttrsWithBooleanTrue(): void
+    {
+        $result = $this->extension->renderAttributes(['disabled' => true]);
 
         $this->assertSame('disabled', $result);
     }
 
-    public function testAttrWithBooleanFalse(): void
+    public function testAttrsWithBooleanFalse(): void
     {
-        $result = $this->extension->attr('disabled', false);
+        $result = $this->extension->renderAttributes(['disabled' => false]);
 
         $this->assertSame('', $result);
     }
 
-    public function testAttrWithArrayValue(): void
+    public function testAttrsWithNullIsOmitted(): void
     {
-        $result = $this->extension->attr('config', ['foo' => 'bar']);
+        $result = $this->extension->renderAttributes(['hidden' => null, 'name' => 'test']);
 
-        $this->assertStringContainsString('json-config=', $result);
-        $this->assertStringContainsString('{"foo":"bar"}', $result);
+        $this->assertSame('name="test"', $result);
     }
 
-    public function testAttrWithObjectValue(): void
+    public function testAttrsWithArrayValue(): void
+    {
+        $result = $this->extension->renderAttributes(['config' => ['foo' => 'bar']]);
+
+        $this->assertSame("json-config='{\"foo\":\"bar\"}'", $result);
+    }
+
+    public function testAttrsWithObjectValue(): void
     {
         $obj = new \stdClass();
         $obj->theme = 'dark';
 
-        $result = $this->extension->attr('config', $obj);
+        $result = $this->extension->renderAttributes(['config' => $obj]);
 
-        $this->assertStringContainsString('json-config=', $result);
-        $this->assertStringContainsString('{"theme":"dark"}', $result);
+        $this->assertSame("json-config='{\"theme\":\"dark\"}'", $result);
     }
 
-    public function testAttrWithNumericValue(): void
+    public function testAttrsWithNumericValue(): void
     {
-        $result = $this->extension->attr('count', 42);
+        $result = $this->extension->renderAttributes(['count' => 42]);
 
         $this->assertSame('count="42"', $result);
     }
 
-    public function testRootOpenWithMercureAutoDetection(): void
+    public function testAttrsSpecialCharactersAreEscaped(): void
     {
-        $mockHub = new class {
-            public function getPublicUrl(): string
-            {
-                return 'https://auto-detected.example.com/.well-known/mercure';
-            }
-        };
+        $result = $this->extension->renderAttributes(['title' => 'He said "hello" & goodbye']);
 
-        $extension = new ReactolithTwigExtension([
-            'root_selector' => '#reactolith',
-            'tag_prefix' => 'ui-',
-            'mercure' => [
-                'enabled' => true,
-                'hub_url' => null,
-                'with_credentials' => false,
-            ],
-        ], $mockHub);
-
-        $html = $extension->rootOpen();
-
-        $this->assertStringContainsString('data-mercure-hub-url="https://auto-detected.example.com/.well-known/mercure"', $html);
+        $this->assertSame('title="He said &quot;hello&quot; &amp; goodbye"', $result);
     }
 
-    public function testRootOpenWithCustomRootSelector(): void
+    public function testAttrsMixedTypes(): void
     {
-        $extension = new ReactolithTwigExtension([
-            'root_selector' => '#my-app',
-            'tag_prefix' => 'ui-',
-            'mercure' => [
-                'enabled' => false,
-                'hub_url' => null,
-                'with_credentials' => false,
-            ],
+        $result = $this->extension->renderAttributes([
+            'variant' => 'outline',
+            'disabled' => true,
+            'hidden' => false,
+            'config' => ['theme' => 'dark'],
         ]);
 
-        $html = $extension->rootOpen();
-
-        $this->assertStringContainsString('id="my-app"', $html);
+        $this->assertSame("variant=\"outline\" disabled json-config='{\"theme\":\"dark\"}'", $result);
     }
 
-    public function testGetFunctions(): void
+    public function testAttrsEmptyArray(): void
     {
+        $result = $this->extension->renderAttributes([]);
+
+        $this->assertSame('', $result);
+    }
+
+    public function testAttrsJsonWithSingleQuotesEscaped(): void
+    {
+        $result = $this->extension->renderAttributes(['data' => ["it's" => 'fine']]);
+
+        $this->assertStringContainsString('json-data=', $result);
+        $this->assertStringContainsString("it&#039;s", $result);
+    }
+
+    // --- getFilters / getFunctions ---
+
+    public function testProvidesFilterAndFunctions(): void
+    {
+        $filters = $this->extension->getFilters();
         $functions = $this->extension->getFunctions();
 
+        $this->assertCount(1, $filters);
+        $this->assertSame('reactolith_attrs', $filters[0]->getName());
+
         $this->assertCount(3, $functions);
-
         $names = array_map(fn ($f) => $f->getName(), $functions);
-        $this->assertContains('reactolith_root_open', $names);
-        $this->assertContains('reactolith_root_close', $names);
-        $this->assertContains('reactolith_attr', $names);
+        $this->assertContains('reactolith_attrs', $names);
+        $this->assertContains('reactolith_scripts', $names);
+        $this->assertContains('reactolith_styles', $names);
     }
 
-    public function testAttrSpecialCharactersAreEscaped(): void
-    {
-        $result = $this->extension->attr('title', 'He said "hello" & goodbye');
+    // --- Vite helpers ---
 
-        $this->assertStringContainsString('title="He said &quot;hello&quot; &amp; goodbye"', $result);
+    public function testRenderScriptsWithoutViteReturnsEmpty(): void
+    {
+        $result = $this->extension->renderScripts();
+
+        $this->assertSame('', $result);
     }
 
-    public function testRootOpenWithMercureWithoutCredentials(): void
+    public function testRenderStylesWithoutViteReturnsEmpty(): void
     {
-        $extension = new ReactolithTwigExtension([
-            'root_selector' => '#reactolith',
-            'tag_prefix' => 'ui-',
-            'mercure' => [
-                'enabled' => true,
-                'hub_url' => 'https://example.com/.well-known/mercure',
-                'with_credentials' => false,
-            ],
+        $result = $this->extension->renderStyles();
+
+        $this->assertSame('', $result);
+    }
+
+    public function testRenderScriptsWithViteDevServer(): void
+    {
+        $resolver = new ViteAssetResolver('/tmp/fake-project', [
+            'enabled' => true,
+            'build_directory' => 'build',
+            'entry_points' => ['resources/js/app.js'],
+            'dev_server_url' => 'http://localhost:5173',
         ]);
 
-        $html = $extension->rootOpen();
+        $extension = new ReactolithTwigExtension([], $resolver);
+        $result = $extension->renderScripts();
 
-        $this->assertStringContainsString('data-mercure-hub-url=', $html);
-        $this->assertStringNotContainsString('data-mercure-with-credentials', $html);
+        $this->assertStringContainsString('<script type="module" src="http://localhost:5173/@vite/client"></script>', $result);
+        $this->assertStringContainsString('<script type="module" src="http://localhost:5173/resources/js/app.js"></script>', $result);
+    }
+
+    public function testRenderStylesWithViteDevServerReturnsEmpty(): void
+    {
+        $resolver = new ViteAssetResolver('/tmp/fake-project', [
+            'enabled' => true,
+            'build_directory' => 'build',
+            'entry_points' => ['resources/js/app.js'],
+            'dev_server_url' => 'http://localhost:5173',
+        ]);
+
+        $extension = new ReactolithTwigExtension([], $resolver);
+        $result = $extension->renderStyles();
+
+        $this->assertSame('', $result);
     }
 }

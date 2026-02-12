@@ -2,112 +2,92 @@
 
 namespace Reactolith\SymfonyBundle\Twig;
 
+use Reactolith\SymfonyBundle\Vite\ViteAssetResolver;
 use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 class ReactolithTwigExtension extends AbstractExtension
 {
-    private array $config;
-    private ?object $mercureHub;
+    public function __construct(
+        private array $config = [],
+        private ?ViteAssetResolver $viteResolver = null,
+    ) {
+    }
 
-    public function __construct(array $config = [], ?object $mercureHub = null)
+    public function getFilters(): array
     {
-        $this->config = $config;
-        $this->mercureHub = $mercureHub;
+        return [
+            new TwigFilter('reactolith_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
+        ];
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('reactolith_root_open', [$this, 'rootOpen'], ['is_safe' => ['html']]),
-            new TwigFunction('reactolith_root_close', [$this, 'rootClose'], ['is_safe' => ['html']]),
-            new TwigFunction('reactolith_attr', [$this, 'attr'], ['is_safe' => ['html']]),
+            new TwigFunction('reactolith_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
+            new TwigFunction('reactolith_scripts', $this->renderScripts(...), ['is_safe' => ['html']]),
+            new TwigFunction('reactolith_styles', $this->renderStyles(...), ['is_safe' => ['html']]),
         ];
     }
 
-    public function rootOpen(array $options = []): string
+    /**
+     * Renders an associative array as HTML attributes following Reactolith conventions.
+     *
+     * - String/Number: name="value"
+     * - Boolean true:  name (attribute without value)
+     * - Boolean false / null: omitted
+     * - Array/Object:  json-name='{"encoded":"json"}'
+     */
+    public function renderAttributes(array $attributes): string
     {
-        $rootSelector = $this->config['root_selector'] ?? '#reactolith';
-        $defaultId = ltrim($rootSelector, '#');
+        $parts = [];
 
-        $id = $options['id'] ?? $defaultId;
-        $attrs = sprintf('id="%s"', htmlspecialchars($id, ENT_QUOTES, 'UTF-8'));
-
-        if (isset($options['class'])) {
-            $attrs .= sprintf(' class="%s"', htmlspecialchars($options['class'], ENT_QUOTES, 'UTF-8'));
-        }
-
-        // Add extra attributes from options (excluding id and class)
-        foreach ($options as $key => $value) {
-            if (in_array($key, ['id', 'class'], true)) {
+        foreach ($attributes as $name => $value) {
+            if ($value === false || $value === null) {
                 continue;
             }
-            $attrs .= sprintf(' %s="%s"', htmlspecialchars($key, ENT_QUOTES, 'UTF-8'), htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'));
-        }
 
-        // Mercure integration
-        $mercureConfig = $this->config['mercure'] ?? [];
-        $mercureEnabled = $mercureConfig['enabled'] ?? true;
-
-        if ($mercureEnabled) {
-            $hubUrl = $mercureConfig['hub_url'] ?? null;
-
-            // Auto-detect from MercureBundle if no manual URL is set
-            if ($hubUrl === null && $this->mercureHub !== null) {
-                // The HubInterface has a getPublicUrl() method
-                if (method_exists($this->mercureHub, 'getPublicUrl')) {
-                    $hubUrl = $this->mercureHub->getPublicUrl();
-                } elseif (method_exists($this->mercureHub, 'getUrl')) {
-                    $hubUrl = $this->mercureHub->getUrl();
-                }
+            if ($value === true) {
+                $parts[] = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+                continue;
             }
 
-            if ($hubUrl !== null) {
-                $attrs .= sprintf(' data-mercure-hub-url="%s"', htmlspecialchars($hubUrl, ENT_QUOTES, 'UTF-8'));
+            if (is_array($value) || is_object($value)) {
+                $jsonValue = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                $parts[] = sprintf(
+                    "json-%s='%s'",
+                    htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
+                    str_replace("'", '&#039;', $jsonValue),
+                );
+                continue;
             }
 
-            $withCredentials = $mercureConfig['with_credentials'] ?? false;
-            if ($withCredentials) {
-                $attrs .= ' data-mercure-with-credentials';
-            }
-        }
-
-        return sprintf('<div %s>', $attrs);
-    }
-
-    public function rootClose(): string
-    {
-        return '</div>';
-    }
-
-    public function attr(string $name, mixed $value): string
-    {
-        // Boolean false: attribute is omitted
-        if ($value === false) {
-            return '';
-        }
-
-        // Boolean true: attribute without value
-        if ($value === true) {
-            return htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-        }
-
-        // Arrays/Objects: json- prefix with JSON-encoded value
-        if (is_array($value) || is_object($value)) {
-            $jsonValue = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
-            return sprintf(
-                "json-%s='%s'",
+            $parts[] = sprintf(
+                '%s="%s"',
                 htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
-                str_replace("'", '&#039;', $jsonValue)
+                htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'),
             );
         }
 
-        // String values: normal HTML attribute
-        return sprintf(
-            '%s="%s"',
-            htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8')
-        );
+        return implode(' ', $parts);
+    }
+
+    public function renderScripts(): string
+    {
+        if ($this->viteResolver === null) {
+            return '';
+        }
+
+        return $this->viteResolver->getScriptTags();
+    }
+
+    public function renderStyles(): string
+    {
+        if ($this->viteResolver === null) {
+            return '';
+        }
+
+        return $this->viteResolver->getStyleTags();
     }
 }

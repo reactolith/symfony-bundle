@@ -55,9 +55,7 @@ class FormThemeTest extends TestCase
 
         // Add Reactolith Twig extension
         $this->twig->addExtension(new ReactolithTwigExtension([
-            'root_selector' => '#reactolith',
             'tag_prefix' => 'ui-',
-            'mercure' => ['enabled' => false, 'hub_url' => null, 'with_credentials' => false],
         ]));
 
         // Set up the form renderer engine

@@ -1,15 +1,16 @@
 # Reactolith Symfony Bundle
 
-Symfony integration for [Reactolith](https://github.com/reactolith/reactolith) – server-side HTML hydration with React/shadcn components.
+Symfony integration for [Reactolith](https://github.com/reactolith/reactolith) -- server-side HTML hydration with React/shadcn components.
 
 **Write your UI in Twig. Get React-powered shadcn/ui components. No JavaScript in your Symfony code.**
 
 Reactolith lets you render HTML with custom tags like `<ui-button>`, `<ui-input>`, `<ui-select>` from your Symfony backend. On the client side, Reactolith automatically hydrates these tags into fully interactive React components (based on [shadcn/ui](https://ui.shadcn.com/)). This bundle provides the Symfony-side integration:
 
-- **Twig Form Theme** – Symfony forms automatically render `<ui-*>` HTML tags
-- **Twig Extension** – Helper functions for Reactolith (root element, Mercure config, prop rendering)
-- **Mercure Integration** – Auto-configuration of the Mercure Hub URL for real-time updates
-- **Custom FormTypes** – Additional form types like `SwitchType`
+- **Twig Form Theme** -- Symfony forms automatically render `<ui-*>` HTML tags
+- **Attribute Filter** -- `reactolith_attrs` renders prop objects as correct HTML attributes (string, boolean, JSON)
+- **Vite Integration** -- Out-of-the-box `{{ reactolith_scripts() }}` / `{{ reactolith_styles() }}` with dev server and production manifest support
+- **HTTP/2 Preload** -- Optional event listener that detects component tags in the response and sends preload headers
+- **Custom FormTypes** -- Additional form types like `SwitchType`
 
 ## Installation
 
@@ -60,10 +61,20 @@ class ContactType extends AbstractType
 
 ```twig
 {# templates/contact.html.twig #}
-{{ reactolith_root_open() }}
+{% extends 'base.html.twig' %}
+
+{% block body %}
   <h1>Contact Us</h1>
   {{ form(form) }}
-{{ reactolith_root_close() }}
+{% endblock %}
+
+{% block javascripts %}
+  {{ reactolith_scripts() }}
+{% endblock %}
+
+{% block stylesheets %}
+  {{ reactolith_styles() }}
+{% endblock %}
 ```
 
 ### 3. Resulting HTML Output
@@ -71,33 +82,30 @@ class ContactType extends AbstractType
 The form theme automatically transforms Symfony's standard form rendering into Reactolith-compatible HTML:
 
 ```html
-<div id="reactolith">
-  <h1>Contact Us</h1>
-  <form name="contact" method="post">
-    <div class="space-y-2">
-      <ui-label for="contact_name">Your Name</ui-label>
-      <ui-input type="text" id="contact_name" name="contact[name]" required />
-    </div>
-    <div class="space-y-2">
-      <ui-label for="contact_email">Email</ui-label>
-      <ui-input type="email" id="contact_email" name="contact[email]" required />
-    </div>
-    <div class="space-y-2">
-      <ui-label for="contact_message">Message</ui-label>
-      <ui-textarea id="contact_message" name="contact[message]" required></ui-textarea>
-    </div>
-    <div class="space-y-2">
-      <ui-label for="contact_newsletter">Subscribe to newsletter</ui-label>
-      <ui-switch id="contact_newsletter" name="contact[newsletter]" json-checked="false" />
-    </div>
-    <div class="space-y-2">
-      <ui-button type="submit" id="contact_submit" name="contact[submit]">Submit</ui-button>
-    </div>
-  </form>
-</div>
+<form name="contact" method="post">
+  <div class="space-y-2">
+    <ui-label for="contact_name">Your Name</ui-label>
+    <ui-input type="text" id="contact_name" name="contact[name]" required />
+  </div>
+  <div class="space-y-2">
+    <ui-label for="contact_email">Email</ui-label>
+    <ui-input type="email" id="contact_email" name="contact[email]" required />
+  </div>
+  <div class="space-y-2">
+    <ui-label for="contact_message">Message</ui-label>
+    <ui-textarea id="contact_message" name="contact[message]" required></ui-textarea>
+  </div>
+  <div class="space-y-2">
+    <ui-label for="contact_newsletter">Subscribe to newsletter</ui-label>
+    <ui-switch id="contact_newsletter" name="contact[newsletter]" json-checked="false" />
+  </div>
+  <div class="space-y-2">
+    <ui-button type="submit" id="contact_submit" name="contact[submit]">Submit</ui-button>
+  </div>
+</form>
 ```
 
-Reactolith on the client side hydrates each `<ui-*>` tag into its corresponding React/shadcn component, giving you fully interactive, styled UI components without writing any JavaScript.
+Reactolith on the client side hydrates each `<ui-*>` tag into its corresponding React/shadcn component.
 
 ## Configuration
 
@@ -105,33 +113,138 @@ Create `config/packages/reactolith.yaml`:
 
 ```yaml
 reactolith:
-  # CSS selector for the Reactolith root element
-  root_selector: '#reactolith'
-
   # HTML tag prefix for components (e.g. "ui-" -> <ui-button>, <ui-input>)
   tag_prefix: 'ui-'
 
-  # Mercure configuration (optional, auto-detected from MercureBundle if available)
-  mercure:
-    enabled: true           # false to disable Mercure integration
-    hub_url: ~              # auto-detected from symfony/mercure-bundle, or set manually
-    with_credentials: false # whether to send cookies with Mercure requests
+  # Vite asset integration
+  vite:
+    enabled: true
+    build_directory: 'build'                 # relative to public/
+    entry_points:
+      - 'resources/js/app.js'
+    dev_server_url: ~                        # e.g. 'http://localhost:5173' for dev
+
+  # HTTP/2 preload headers
+  preload:
+    enabled: false                           # opt-in
 
   # Form theme
   form_theme:
-    enabled: true           # auto-registers the form theme globally
+    enabled: true                            # auto-registers the form theme globally
 ```
 
 ### Configuration Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `root_selector` | `#reactolith` | CSS selector for the Reactolith root element. Used to derive the default `id` attribute. |
 | `tag_prefix` | `ui-` | HTML tag prefix for all Reactolith components. Change this if `ui-` conflicts with your project. |
-| `mercure.enabled` | `true` | Whether to include Mercure data attributes on the root element. |
-| `mercure.hub_url` | `null` | Mercure Hub URL. Auto-detected from `symfony/mercure-bundle` if installed, or set manually. |
-| `mercure.with_credentials` | `false` | Whether Mercure requests should include cookies (for authenticated SSE connections). |
-| `form_theme.enabled` | `true` | Whether to auto-register the Reactolith form theme globally. Disable if you want to apply it manually per form. |
+| `vite.enabled` | `true` | Enable Vite asset integration. |
+| `vite.build_directory` | `build` | Vite build output directory, relative to `public/`. |
+| `vite.entry_points` | `['resources/js/app.js']` | List of Vite entry point files. |
+| `vite.dev_server_url` | `null` | Vite dev server URL. Set to e.g. `http://localhost:5173` during development. Leave `null` for production (reads manifest). |
+| `preload.enabled` | `false` | Enable the HTTP/2 component preload listener. |
+| `form_theme.enabled` | `true` | Whether to auto-register the Reactolith form theme globally. |
+
+## Twig Filter / Function: `reactolith_attrs`
+
+Renders an associative array as HTML attributes following Reactolith conventions. Available as both a **filter** and a **function**.
+
+```twig
+{# As a filter #}
+<ui-button {{ {variant: 'outline', disabled: true, config: {theme: 'dark'}}|reactolith_attrs }}>
+  Click me
+</ui-button>
+
+{# As a function #}
+<ui-button {{ reactolith_attrs({variant: 'outline', size: 'lg'}) }}>
+  Click me
+</ui-button>
+```
+
+Output:
+
+```html
+<ui-button variant="outline" disabled json-config='{"theme":"dark"}'>
+  Click me
+</ui-button>
+```
+
+### Attribute rendering rules (Reactolith conventions)
+
+| Value Type | Output | Example Input | Example Output |
+|-----------|--------|---------------|----------------|
+| String | `name="value"` | `{variant: 'outline'}` | `variant="outline"` |
+| Number | `name="value"` | `{count: 42}` | `count="42"` |
+| Boolean `true` | `name` (no value) | `{disabled: true}` | `disabled` |
+| Boolean `false` | *(omitted)* | `{disabled: false}` | *(nothing)* |
+| `null` | *(omitted)* | `{hidden: null}` | *(nothing)* |
+| Array/Object | `json-name='...'` | `{config: {a: 1}}` | `json-config='{"a":1}'` |
+
+## Vite Integration
+
+The bundle provides out-of-the-box Vite support with `{{ reactolith_scripts() }}` and `{{ reactolith_styles() }}`.
+
+### Development
+
+Set the dev server URL in your config (or via environment-specific config):
+
+```yaml
+# config/packages/dev/reactolith.yaml
+reactolith:
+  vite:
+    dev_server_url: 'http://localhost:5173'
+```
+
+The bundle will output:
+
+```html
+<script type="module" src="http://localhost:5173/@vite/client"></script>
+<script type="module" src="http://localhost:5173/resources/js/app.js"></script>
+```
+
+### Production
+
+With `dev_server_url: ~` (the default), the bundle reads the Vite manifest from `public/{build_directory}/.vite/manifest.json` (Vite 5+) or `public/{build_directory}/manifest.json` (Vite 4) and outputs the correct hashed asset URLs:
+
+```html
+<script type="module" src="/build/assets/app-BhF9KQ3W.js"></script>
+<link rel="stylesheet" href="/build/assets/app-CJGkQYKR.css">
+```
+
+### Multiple Entry Points
+
+```yaml
+reactolith:
+  vite:
+    entry_points:
+      - 'resources/js/app.js'
+      - 'resources/js/admin.js'
+```
+
+## HTTP/2 Component Preloading
+
+Enable the preload listener to automatically detect which Reactolith components are used on each page and send that information as response headers:
+
+```yaml
+reactolith:
+  preload:
+    enabled: true
+```
+
+The listener scans the HTML response for `<ui-*>` tags and adds:
+
+**Component discovery header:**
+```
+X-Reactolith-Components: ui-button, ui-input, ui-label, ui-textarea
+```
+
+**Asset preload headers** (when Vite integration is enabled):
+```
+Link: </build/assets/app-BhF9KQ3W.js>; rel=preload; as=script
+Link: </build/assets/app-CJGkQYKR.css>; rel=preload; as=style
+```
+
+This allows reverse proxies, CDNs, or HTTP/2-capable servers to push assets before the browser requests them.
 
 ## Form Theme
 
@@ -180,99 +293,25 @@ The tag prefix is configurable. If you set `tag_prefix: 'x-'`, all tags will use
 <x-button type="submit">Submit</x-button>
 ```
 
-## Twig Functions
+### SwitchType
 
-### `reactolith_root_open(options = {})`
+The bundle provides a custom `SwitchType` form type that renders as `<ui-switch>`:
 
-Renders the opening tag of the Reactolith root element:
+```php
+use Reactolith\SymfonyBundle\Form\Type\SwitchType;
 
-```twig
-{{ reactolith_root_open() }}
-{# Output: <div id="reactolith"> #}
-
-{{ reactolith_root_open({ id: 'my-app', class: 'min-h-screen' }) }}
-{# Output: <div id="my-app" class="min-h-screen"> #}
+$builder->add('darkMode', SwitchType::class, [
+    'label' => 'Enable dark mode',
+]);
 ```
 
-If Mercure is configured, the root element includes Mercure data attributes:
+Output:
 
 ```html
-<div id="reactolith" data-mercure-hub-url="https://example.com/.well-known/mercure" data-mercure-with-credentials>
+<ui-switch id="form_darkMode" name="form[darkMode]" json-checked="false" />
 ```
 
-### `reactolith_root_close()`
-
-Renders the closing tag:
-
-```twig
-{{ reactolith_root_close() }}
-{# Output: </div> #}
-```
-
-### `reactolith_attr(name, value)`
-
-Helper to render Reactolith props with correct formatting based on value type:
-
-```twig
-{# String value: normal HTML attribute #}
-{{ reactolith_attr('variant', 'outline') }}
-{# Output: variant="outline" #}
-
-{# Boolean true: attribute without value #}
-{{ reactolith_attr('disabled', true) }}
-{# Output: disabled #}
-
-{# Boolean false: attribute omitted #}
-{{ reactolith_attr('disabled', false) }}
-{# Output: (empty string) #}
-
-{# Array/Object: json- prefix with JSON-encoded value #}
-{{ reactolith_attr('config', { theme: 'dark', size: 'lg' }) }}
-{# Output: json-config='{"theme":"dark","size":"lg"}' #}
-```
-
-**Prop rendering rules (Reactolith conventions):**
-
-| Value Type | Output Format | Example |
-|-----------|--------------|---------|
-| String | `name="value"` | `variant="outline"` |
-| Boolean `true` | `name` (no value) | `disabled` |
-| Boolean `false` | *(omitted)* | |
-| Array/Object | `json-name='...'` | `json-config='{"foo":"bar"}'` |
-| Component ref | `as-name="component-tag"` | `as-icon="ui-chevron-down"` |
-
-## Mercure Integration
-
-The bundle automatically detects the Mercure Hub URL when `symfony/mercure-bundle` is installed:
-
-```bash
-composer require symfony/mercure-bundle
-```
-
-The Hub URL is injected into the root element as a data attribute, which Reactolith's client-side library uses to establish an SSE connection for real-time updates.
-
-### Auto-Detection
-
-If `symfony/mercure-bundle` is installed and configured, the Hub URL is automatically detected. No additional configuration is needed.
-
-### Manual Configuration
-
-You can also set the Hub URL manually:
-
-```yaml
-reactolith:
-  mercure:
-    hub_url: 'https://mercure.example.com/.well-known/mercure'
-    with_credentials: true
-```
-
-### Disabling Mercure
-
-```yaml
-reactolith:
-  mercure:
-    enabled: false
-```
+`SwitchType` extends `CheckboxType`, so it accepts the same options and submits a boolean value.
 
 ## Frontend Setup
 
@@ -289,14 +328,18 @@ npm install reactolith @loadable/component
 Use the [Reactolith UI Registry](https://github.com/reactolith/ui) (shadcn-compatible) to install the components your forms need:
 
 ```bash
-npx shadcn add @reactolith/button @reactolith/input @reactolith/select @reactolith/checkbox @reactolith/switch @reactolith/radio-group @reactolith/label @reactolith/textarea
+npx shadcn add @reactolith/button @reactolith/input @reactolith/select \
+  @reactolith/checkbox @reactolith/switch @reactolith/radio-group \
+  @reactolith/label @reactolith/textarea
 ```
 
 Components are installed locally into your project under `components/reactolith/`.
 
-### 3. Set Up the Loader
+### 3. Set Up Vite
 
-Configure the Reactolith loader in your JavaScript entry point to register all installed components. Refer to the [Reactolith documentation](https://github.com/reactolith/reactolith) for setup instructions.
+Configure Vite with a standard `vite.config.js` that includes your entry point. The bundle reads Vite's manifest for production builds and connects to the dev server during development.
+
+Refer to the [Reactolith documentation](https://github.com/reactolith/reactolith) for the full client-side setup.
 
 ## Customizing the Form Theme
 
@@ -332,7 +375,7 @@ Create your own theme that extends the Reactolith theme:
 {% endblock %}
 ```
 
-Then apply it globally:
+Then apply it globally in `config/packages/twig.yaml`:
 
 ```yaml
 twig:
@@ -363,26 +406,6 @@ Then apply it in your templates:
 {% form_theme form '@Reactolith/form/reactolith_layout.html.twig' %}
 {{ form(form) }}
 ```
-
-## SwitchType
-
-The bundle provides a custom `SwitchType` form type that renders as `<ui-switch>`:
-
-```php
-use Reactolith\SymfonyBundle\Form\Type\SwitchType;
-
-$builder->add('darkMode', SwitchType::class, [
-    'label' => 'Enable dark mode',
-]);
-```
-
-Output:
-
-```html
-<ui-switch id="form_darkMode" name="form[darkMode]" json-checked="false" />
-```
-
-`SwitchType` extends `CheckboxType`, so it accepts the same options and submits a boolean value.
 
 ## License
 
