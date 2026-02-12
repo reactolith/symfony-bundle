@@ -123,13 +123,13 @@ class ReactolithTwigExtensionTest extends TestCase
         $functions = $this->extension->getFunctions();
 
         $this->assertCount(1, $filters);
-        $this->assertSame('reactolith_attrs', $filters[0]->getName());
+        $this->assertSame('re_attrs', $filters[0]->getName());
 
         $this->assertCount(3, $functions);
         $names = array_map(fn ($f) => $f->getName(), $functions);
-        $this->assertContains('reactolith_attrs', $names);
-        $this->assertContains('reactolith_scripts', $names);
-        $this->assertContains('reactolith_styles', $names);
+        $this->assertContains('re_attrs', $names);
+        $this->assertContains('re_scripts', $names);
+        $this->assertContains('re_styles', $names);
     }
 
     // --- Vite helpers ---

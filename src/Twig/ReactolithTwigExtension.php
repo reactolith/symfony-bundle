@@ -18,16 +18,16 @@ class ReactolithTwigExtension extends AbstractExtension
     public function getFilters(): array
     {
         return [
-            new TwigFilter('reactolith_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
+            new TwigFilter('re_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
         ];
     }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('reactolith_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
-            new TwigFunction('reactolith_scripts', $this->renderScripts(...), ['is_safe' => ['html']]),
-            new TwigFunction('reactolith_styles', $this->renderStyles(...), ['is_safe' => ['html']]),
+            new TwigFunction('re_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
+            new TwigFunction('re_scripts', $this->renderScripts(...), ['is_safe' => ['html']]),
+            new TwigFunction('re_styles', $this->renderStyles(...), ['is_safe' => ['html']]),
         ];
     }
 
