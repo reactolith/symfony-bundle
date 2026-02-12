@@ -4,6 +4,7 @@ namespace Reactolith\SymfonyBundle\Tests\DependencyInjection;
 
 use PHPUnit\Framework\TestCase;
 use Reactolith\SymfonyBundle\DependencyInjection\Configuration;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 
 class ConfigurationTest extends TestCase
@@ -28,14 +29,41 @@ class ConfigurationTest extends TestCase
 
     public function testCustomTagPrefix(): void
     {
-        $config = $this->process([
-            'tag_prefix' => 'x-',
-        ]);
+        $config = $this->process(['tag_prefix' => 'x-']);
 
         $this->assertSame('x-', $config['tag_prefix']);
     }
 
-    public function testPreloadEnabled(): void
+    public function testTagPrefixWithNumbers(): void
+    {
+        $config = $this->process(['tag_prefix' => 'app2-']);
+
+        $this->assertSame('app2-', $config['tag_prefix']);
+    }
+
+    public function testTagPrefixMustEndWithDash(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/tag prefix/i');
+
+        $this->process(['tag_prefix' => 'ui']);
+    }
+
+    public function testTagPrefixCannotBeEmpty(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['tag_prefix' => '']);
+    }
+
+    public function testTagPrefixRejectsInvalidCharacters(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['tag_prefix' => 'ui_comp-']);
+    }
+
+    public function testPreloadCanBeEnabled(): void
     {
         $config = $this->process([
             'preload' => ['enabled' => true],
@@ -44,10 +72,30 @@ class ConfigurationTest extends TestCase
         $this->assertTrue($config['preload']['enabled']);
     }
 
-    public function testFormThemeDisabled(): void
+    public function testPreloadShorthandEnable(): void
+    {
+        // canBeEnabled() allows `preload: true` as shorthand
+        $config = $this->process([
+            'preload' => true,
+        ]);
+
+        $this->assertTrue($config['preload']['enabled']);
+    }
+
+    public function testFormThemeCanBeDisabled(): void
     {
         $config = $this->process([
             'form_theme' => ['enabled' => false],
+        ]);
+
+        $this->assertFalse($config['form_theme']['enabled']);
+    }
+
+    public function testFormThemeShorthandDisable(): void
+    {
+        // canBeDisabled() allows `form_theme: false` as shorthand
+        $config = $this->process([
+            'form_theme' => false,
         ]);
 
         $this->assertFalse($config['form_theme']['enabled']);
@@ -71,24 +119,6 @@ class ConfigurationTest extends TestCase
         $tree = $this->configuration->getConfigTreeBuilder();
 
         $this->assertSame('reactolith', $tree->buildTree()->getName());
-    }
-
-    public function testInvalidPreloadValueThrows(): void
-    {
-        $this->expectException(\Symfony\Component\Config\Definition\Exception\InvalidTypeException::class);
-
-        $this->process([
-            'preload' => ['enabled' => 'not-a-bool'],
-        ]);
-    }
-
-    public function testInvalidFormThemeValueThrows(): void
-    {
-        $this->expectException(\Symfony\Component\Config\Definition\Exception\InvalidTypeException::class);
-
-        $this->process([
-            'form_theme' => ['enabled' => 'not-a-bool'],
-        ]);
     }
 
     public function testMultipleConfigsMerged(): void

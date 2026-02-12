@@ -114,18 +114,26 @@ The form theme transforms Symfony forms into Reactolith-compatible HTML:
 ```yaml
 # config/packages/reactolith.yaml
 reactolith:
-  tag_prefix: 'ui-'          # HTML tag prefix for components
+  tag_prefix: 'ui-'          # must match /^[a-z][a-z0-9]*-$/
   preload:
     enabled: false            # opt-in HTTP/2 preload headers
   form_theme:
     enabled: true             # auto-registers the form theme globally
 ```
 
+Shorthand:
+
+```yaml
+reactolith:
+  preload: true               # same as preload: { enabled: true }
+  form_theme: false            # same as form_theme: { enabled: false }
+```
+
 | Option | Default | Description |
 |--------|---------|-------------|
-| `tag_prefix` | `ui-` | HTML tag prefix for all Reactolith components. |
-| `preload.enabled` | `false` | Enable the HTTP/2 component preload listener. |
-| `form_theme.enabled` | `true` | Auto-register the Reactolith form theme globally. |
+| `tag_prefix` | `ui-` | HTML tag prefix. Must be lowercase, ending with `-`. |
+| `preload` | `false` | Enable the HTTP/2 component preload listener. |
+| `form_theme` | `true` | Auto-register the Reactolith form theme globally. |
 
 ## `re_attrs` Filter / Function
 

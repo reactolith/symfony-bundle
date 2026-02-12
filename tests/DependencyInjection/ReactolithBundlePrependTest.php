@@ -3,26 +3,16 @@
 namespace Reactolith\SymfonyBundle\Tests\DependencyInjection;
 
 use PHPUnit\Framework\TestCase;
-use Reactolith\SymfonyBundle\DependencyInjection\ReactolithExtension;
+use Reactolith\SymfonyBundle\ReactolithBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-class ReactolithExtensionTest extends TestCase
+class ReactolithBundlePrependTest extends TestCase
 {
-    public function testAlias(): void
-    {
-        $extension = new ReactolithExtension();
-
-        $this->assertSame('reactolith', $extension->getAlias());
-    }
-
     public function testPrependRegistersFormThemeByDefault(): void
     {
-        $container = new ContainerBuilder();
-        $container->registerExtension($extension = new ReactolithExtension());
+        $builder = $this->createPrependedContainer([]);
 
-        $extension->prepend($container);
-
-        $twigConfigs = $container->getExtensionConfig('twig');
+        $twigConfigs = $builder->getExtensionConfig('twig');
         $formThemes = $this->collectFormThemes($twigConfigs);
 
         $this->assertContains('@Reactolith/form/reactolith_layout.html.twig', $formThemes);
@@ -30,30 +20,21 @@ class ReactolithExtensionTest extends TestCase
 
     public function testPrependSkipsFormThemeWhenDisabled(): void
     {
-        $container = new ContainerBuilder();
-        $container->registerExtension($extension = new ReactolithExtension());
-
-        // Provide config that disables form_theme
-        $container->prependExtensionConfig('reactolith', [
+        $builder = $this->createPrependedContainer([
             'form_theme' => ['enabled' => false],
         ]);
 
-        $extension->prepend($container);
-
-        $twigConfigs = $container->getExtensionConfig('twig');
+        $twigConfigs = $builder->getExtensionConfig('twig');
         $formThemes = $this->collectFormThemes($twigConfigs);
 
         $this->assertNotContains('@Reactolith/form/reactolith_layout.html.twig', $formThemes);
     }
 
-    public function testPrependRegistersTagPrefixAsGlobal(): void
+    public function testPrependRegistersDefaultTagPrefixAsGlobal(): void
     {
-        $container = new ContainerBuilder();
-        $container->registerExtension($extension = new ReactolithExtension());
+        $builder = $this->createPrependedContainer([]);
 
-        $extension->prepend($container);
-
-        $twigConfigs = $container->getExtensionConfig('twig');
+        $twigConfigs = $builder->getExtensionConfig('twig');
         $globals = $this->collectGlobals($twigConfigs);
 
         $this->assertArrayHasKey('reactolith_tag_prefix', $globals);
@@ -62,30 +43,46 @@ class ReactolithExtensionTest extends TestCase
 
     public function testPrependRegistersCustomTagPrefixAsGlobal(): void
     {
-        $container = new ContainerBuilder();
-        $container->registerExtension($extension = new ReactolithExtension());
-
-        $container->prependExtensionConfig('reactolith', [
+        $builder = $this->createPrependedContainer([
             'tag_prefix' => 'x-',
         ]);
 
-        $extension->prepend($container);
-
-        $twigConfigs = $container->getExtensionConfig('twig');
+        $twigConfigs = $builder->getExtensionConfig('twig');
         $globals = $this->collectGlobals($twigConfigs);
 
         $this->assertSame('x-', $globals['reactolith_tag_prefix']);
     }
 
-    public function testLoadDoesNotThrow(): void
+    private function createPrependedContainer(array $bundleConfig): ContainerBuilder
     {
-        $extension = new ReactolithExtension();
-        $container = new ContainerBuilder();
+        $bundle = new ReactolithBundle();
+        $builder = new ContainerBuilder();
 
-        $extension->load([], $container);
+        if ($bundleConfig !== []) {
+            $builder->prependExtensionConfig('reactolith', $bundleConfig);
+        }
 
-        // load() is intentionally empty; just ensure it doesn't throw
-        $this->assertTrue(true);
+        // AbstractBundle::prependExtension() needs a ContainerConfigurator.
+        // We call the prepend logic via reflection since we can't easily
+        // construct a full ContainerConfigurator in tests.
+        $method = new \ReflectionMethod($bundle, 'prependExtension');
+
+        $loader = new \Symfony\Component\DependencyInjection\Loader\PhpFileLoader(
+            $builder,
+            new \Symfony\Component\Config\FileLocator(),
+        );
+        $instanceof = [];
+        $configurator = new \Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator(
+            $builder,
+            $loader,
+            $instanceof,
+            __DIR__,
+            'test',
+        );
+
+        $method->invoke($bundle, $configurator, $builder);
+
+        return $builder;
     }
 
     private function collectFormThemes(array $twigConfigs): array
