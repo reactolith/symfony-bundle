@@ -1,0 +1,164 @@
+{# Extends the base div layout for fallback on blocks we don't override #}
+{% use "form_div_layout.html.twig" %}
+
+{% block form_row %}
+<div class="space-y-2">
+  {{ form_label(form) }}
+  {{ form_widget(form) }}
+  {{ form_help(form) }}
+  {{ form_errors(form) }}
+</div>
+{% endblock %}
+
+{% block form_label %}
+{% if label is not same as(false) %}
+{% set _prefix = reactolith_tag_prefix|default('ui-') %}
+<{{ _prefix }}label{% if id is defined %} for="{{ id }}"{% endif %}{% if label_attr is defined %}{% for key, val in label_attr %} {{ key }}="{{ val }}"{% endfor %}{% endif %}>
+  {{- label is not same as(null) ? (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) : name|humanize -}}
+</{{ _prefix }}label>
+{% endif %}
+{% endblock %}
+
+{% block form_widget_simple %}
+{% set _prefix = reactolith_tag_prefix|default('ui-') %}
+<{{ _prefix }}input
+  type="{{ type|default('text') }}"
+  id="{{ id }}"
+  name="{{ full_name }}"
+  {% if value is not empty %}value="{{ value }}"{% endif %}
+  {% if required %}required{% endif %}
+  {% if disabled %}disabled{% endif %}
+  {% if attr.placeholder is defined %}placeholder="{{ attr.placeholder }}"{% endif %}
+  {% if attr.class is defined %}class="{{ attr.class }}"{% endif %}
+  {% for key, val in attr %}{% if key not in ['placeholder', 'class'] %}{{ key }}="{{ val }}"{% endif %}{% endfor %}
+/>
+{% endblock %}
+
+{% block textarea_widget %}
+{% set _prefix = reactolith_tag_prefix|default('ui-') %}
+<{{ _prefix }}textarea
+  id="{{ id }}"
+  name="{{ full_name }}"
+  {% if required %}required{% endif %}
+  {% if disabled %}disabled{% endif %}
+  {% if attr.placeholder is defined %}placeholder="{{ attr.placeholder }}"{% endif %}
+  {% if attr.rows is defined %}rows="{{ attr.rows }}"{% endif %}
+  {% for key, val in attr %}{% if key not in ['placeholder', 'rows'] %}{{ key }}="{{ val }}"{% endif %}{% endfor %}
+>{{ value }}</{{ _prefix }}textarea>
+{% endblock %}
+
+{% block checkbox_widget %}
+{% set _prefix = reactolith_tag_prefix|default('ui-') %}
+<{{ _prefix }}checkbox
+  id="{{ id }}"
+  name="{{ full_name }}"
+  {% if value is defined %}value="{{ value }}"{% endif %}
+  {% if checked %}json-checked="true"{% else %}json-checked="false"{% endif %}
+  {% if required %}required{% endif %}
+  {% if disabled %}disabled{% endif %}
+  {% for key, val in attr %}{{ key }}="{{ val }}"{% endfor %}
+/>
+{% endblock %}
+
+{% block choice_widget_collapsed %}
+{% set _prefix = reactolith_tag_prefix|default('ui-') %}
+<{{ _prefix }}select name="{{ full_name }}" {% if required %}required{% endif %} {% if disabled %}disabled{% endif %}>
+  <{{ _prefix }}select-trigger id="{{ id }}">
+    <{{ _prefix }}select-value placeholder="{{ placeholder|default('Select...') }}" />
+  </{{ _prefix }}select-trigger>
+  <{{ _prefix }}select-content>
+    {% if placeholder is not none and not required %}
+      <{{ _prefix }}select-item value="">{{ placeholder }}</{{ _prefix }}select-item>
+    {% endif %}
+    {% for group_label, choice in choices %}
+      {% if choice is iterable %}
+        {% for sub_choice in choice %}
+          <{{ _prefix }}select-item
+            value="{{ sub_choice.value }}"
+            {% if sub_choice.value == value %}json-selected="true"{% endif %}
+          >{{ translation_domain is same as(false) ? sub_choice.label : sub_choice.label|trans({}, translation_domain) }}</{{ _prefix }}select-item>
+        {% endfor %}
+      {% else %}
+        <{{ _prefix }}select-item
+          value="{{ choice.value }}"
+          {% if choice.value == value %}json-selected="true"{% endif %}
+        >{{ translation_domain is same as(false) ? choice.label : choice.label|trans({}, translation_domain) }}</{{ _prefix }}select-item>
+      {% endif %}
+    {% endfor %}
+  </{{ _prefix }}select-content>
+</{{ _prefix }}select>
+{% endblock %}
+
+{% block choice_widget_expanded %}
+{% set _prefix = reactolith_tag_prefix|default('ui-') %}
+{% if multiple %}
+  {# Checkbox group #}
+  <div id="{{ id }}" class="space-y-2">
+    {% for child in form %}
+      <div class="flex items-center space-x-2">
+        {{ form_widget(child) }}
+        {{ form_label(child) }}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  {# Radio group #}
+  <{{ _prefix }}radio-group
+    id="{{ id }}"
+    name="{{ full_name }}"
+    {% if value is not empty %}json-value='"{{ value }}"'{% endif %}
+    {% if required %}required{% endif %}
+    {% if disabled %}disabled{% endif %}
+  >
+    {% for child in form %}
+      <div class="flex items-center space-x-2">
+        <{{ _prefix }}radio-group-item value="{{ child.vars.value }}" id="{{ child.vars.id }}" />
+        <{{ _prefix }}label for="{{ child.vars.id }}">{{ translation_domain is same as(false) ? child.vars.label : child.vars.label|trans({}, translation_domain) }}</{{ _prefix }}label>
+      </div>
+    {% endfor %}
+  </{{ _prefix }}radio-group>
+{% endif %}
+{% endblock %}
+
+{% block button_widget %}
+{% set _prefix = reactolith_tag_prefix|default('ui-') %}
+<{{ _prefix }}button
+  type="{{ type|default('button') }}"
+  id="{{ id }}"
+  name="{{ full_name }}"
+  {% if disabled %}disabled{% endif %}
+  {% if attr.variant is defined %}variant="{{ attr.variant }}"{% endif %}
+  {% for key, val in attr %}{% if key != 'variant' %}{{ key }}="{{ val }}"{% endif %}{% endfor %}
+>{{ label is not same as(null) ? (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) : name|humanize }}</{{ _prefix }}button>
+{% endblock %}
+
+{% block submit_widget %}
+{% set type = type|default('submit') %}
+{{ block('button_widget') }}
+{% endblock %}
+
+{% block form_errors %}
+{% if errors|length > 0 %}
+  {% for error in errors %}
+    <p class="text-sm font-medium text-destructive">{{ error.message }}</p>
+  {% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block form_help %}
+{% if help is not empty %}
+  <p class="text-sm text-muted-foreground">{{ translation_domain is same as(false) ? help : help|trans(help_translation_parameters, translation_domain) }}</p>
+{% endif %}
+{% endblock %}
+
+{% block reactolith_switch_widget %}
+{% set _prefix = reactolith_tag_prefix|default('ui-') %}
+<{{ _prefix }}switch
+  id="{{ id }}"
+  name="{{ full_name }}"
+  {% if checked %}json-checked="true"{% else %}json-checked="false"{% endif %}
+  {% if required %}required{% endif %}
+  {% if disabled %}disabled{% endif %}
+  {% for key, val in attr %}{{ key }}="{{ val }}"{% endfor %}
+/>
+{% endblock %}

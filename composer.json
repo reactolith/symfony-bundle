@@ -1,0 +1,44 @@
+{
+    "name": "reactolith/symfony-bundle",
+    "description": "Symfony integration for Reactolith – server-side HTML hydration with React/shadcn components. Includes Twig form theme, Mercure integration, and helper functions.",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": [
+        "symfony",
+        "react",
+        "shadcn",
+        "reactolith",
+        "form-theme",
+        "mercure",
+        "server-side-rendering"
+    ],
+    "require": {
+        "php": ">=8.2",
+        "symfony/form": "^6.4 || ^7.0",
+        "symfony/framework-bundle": "^6.4 || ^7.0",
+        "symfony/twig-bundle": "^6.4 || ^7.0",
+        "twig/twig": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0 || ^11.0",
+        "symfony/mercure-bundle": "^0.3",
+        "symfony/phpunit-bridge": "^6.4 || ^7.0",
+        "symfony/translation": "^6.4 || ^7.0 || ^8.0"
+    },
+    "suggest": {
+        "symfony/mercure-bundle": "Required for real-time updates via Mercure SSE"
+    },
+    "autoload": {
+        "psr-4": {
+            "Reactolith\\SymfonyBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Reactolith\\SymfonyBundle\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
