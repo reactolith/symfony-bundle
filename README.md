@@ -191,10 +191,7 @@ Instead of writing your own components, you can use [shadcn/ui](https://ui.shadc
 The fastest way to get a working setup with styled components:
 
 ```bash
-npx shadcn@latest create \
-  --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=neutral&theme=neutral&iconLibrary=lucide&font=inter&menuAccent=subtle&menuColor=default&radius=default&template=vite&rtl=false" \
-  --template vite \
-  my-frontend
+npx shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=neutral&theme=neutral&iconLibrary=lucide&font=inter&menuAccent=subtle&menuColor=default&radius=default&template=vite&rtl=false" --template vite
 ```
 
 This scaffolds a complete Vite + React + Tailwind + shadcn/ui project. Then copy the generated `src/components/ui/` directory into your Symfony project's `assets/components/ui/` folder and adapt the entry point.
