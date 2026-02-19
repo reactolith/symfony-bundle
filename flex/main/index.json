@@ -1,0 +1,15 @@
+{
+    "aliases": [],
+    "recipes": {
+        "reactolith/symfony-bundle": ["1.0"]
+    },
+    "recipe-conflicts": {},
+    "versions": [],
+    "branch": "main",
+    "is_contrib": true,
+    "_links": {
+        "repository": "github.com/reactolith/symfony-bundle",
+        "origin_template": "{package}:{version}@github.com/reactolith/symfony-bundle:main",
+        "recipe_template": "https://api.github.com/repos/reactolith/symfony-bundle/contents/flex/main/{package_dotted}.{version}.json"
+    }
+}
