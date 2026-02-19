@@ -210,7 +210,7 @@ This creates components in `src/components/ui/` (or your configured path). Move 
 [Reactolith UI](https://reactolith.github.io/ui/) provides a shadcn-compatible component registry specifically tailored for Reactolith:
 
 ```bash
-npx shadcn@latest add -r https://reactolith.github.io/ui button input textarea select checkbox label switch
+npx shadcn@latest add npx shadcn@latest add https://reactolith.github.io/ui/r/button.json npx shadcn@latest add https://reactolith.github.io/ui/r/input.json
 ```
 
 These components are pre-configured to work seamlessly with Reactolith's hydration model.
