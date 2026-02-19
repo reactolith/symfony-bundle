@@ -18,36 +18,11 @@ Reactolith lets you render HTML with custom tags like `<ui-button>`, `<ui-input>
 
 ## Installation
 
-### Step 1: Configure Symfony Flex (recommended)
-
-To enable automatic bundle registration, add the Reactolith recipe endpoint to your `composer.json`:
-
-```json
-{
-    "extra": {
-        "symfony": {
-            "allow-contrib": true,
-            "endpoint": [
-                "https://api.github.com/repos/reactolith/symfony-bundle/contents/flex/main/index.json",
-                "flex://defaults"
-            ]
-        }
-    }
-}
-```
-
-### Step 2: Install the packages
-
 ```bash
 composer require reactolith/symfony-bundle pentatrion/vite-bundle
 ```
 
-With the Flex endpoint configured, both bundles are registered in `config/bundles.php` automatically.
-
-<details>
-<summary><strong>Without Flex:</strong> manual bundle registration</summary>
-
-If you don't want to configure the Flex endpoint, add both bundles to `config/bundles.php` manually:
+Add the bundle to `config/bundles.php`:
 
 ```php
 return [
@@ -57,7 +32,7 @@ return [
 ];
 ```
 
-</details>
+> **Note**: `pentatrion/vite-bundle` is registered automatically by Symfony Flex (with `allow-contrib: true`). `ReactolithBundle` must be added manually until the [Flex recipe](https://github.com/symfony/recipes-contrib) is merged.
 
 ## Quick Start
 
