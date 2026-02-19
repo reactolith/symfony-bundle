@@ -3,19 +3,21 @@
 namespace Reactolith\SymfonyBundle\Tests\DependencyInjection;
 
 use PHPUnit\Framework\TestCase;
-use Reactolith\SymfonyBundle\DependencyInjection\Configuration;
+use Reactolith\SymfonyBundle\ReactolithBundle;
+use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 
 class ConfigurationTest extends TestCase
 {
     private Processor $processor;
-    private Configuration $configuration;
+    private ConfigurationInterface $configuration;
 
     protected function setUp(): void
     {
         $this->processor = new Processor();
-        $this->configuration = new Configuration();
+        $this->configuration = $this->buildConfiguration();
     }
 
     public function testDefaultValues(): void
@@ -134,5 +136,23 @@ class ConfigurationTest extends TestCase
     private function process(array $input): array
     {
         return $this->processor->processConfiguration($this->configuration, [$input]);
+    }
+
+    private function buildConfiguration(): ConfigurationInterface
+    {
+        $bundle = new ReactolithBundle();
+        $treeBuilder = new \Symfony\Component\Config\Definition\Builder\TreeBuilder('reactolith');
+        $locator = new \Symfony\Component\Config\FileLocator(__DIR__);
+        $loader = new \Symfony\Component\Config\Definition\Loader\DefinitionFileLoader($treeBuilder, $locator);
+        $configurator = new DefinitionConfigurator($treeBuilder, $loader, __DIR__, 'test.php');
+        $bundle->configure($configurator);
+
+        return new class($treeBuilder) implements ConfigurationInterface {
+            public function __construct(private \Symfony\Component\Config\Definition\Builder\TreeBuilder $treeBuilder) {}
+            public function getConfigTreeBuilder(): \Symfony\Component\Config\Definition\Builder\TreeBuilder
+            {
+                return $this->treeBuilder;
+            }
+        };
     }
 }
