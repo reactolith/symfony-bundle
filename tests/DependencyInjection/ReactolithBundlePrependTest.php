@@ -8,28 +8,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class ReactolithBundlePrependTest extends TestCase
 {
-    public function testPrependRegistersFormThemeByDefault(): void
-    {
-        $builder = $this->createPrependedContainer([]);
-
-        $twigConfigs = $builder->getExtensionConfig('twig');
-        $formThemes = $this->collectFormThemes($twigConfigs);
-
-        $this->assertContains('@Reactolith/form/reactolith_layout.html.twig', $formThemes);
-    }
-
-    public function testPrependSkipsFormThemeWhenDisabled(): void
-    {
-        $builder = $this->createPrependedContainer([
-            'form_theme' => ['enabled' => false],
-        ]);
-
-        $twigConfigs = $builder->getExtensionConfig('twig');
-        $formThemes = $this->collectFormThemes($twigConfigs);
-
-        $this->assertNotContains('@Reactolith/form/reactolith_layout.html.twig', $formThemes);
-    }
-
     public function testPrependRegistersDefaultTagPrefixAsGlobal(): void
     {
         $builder = $this->createPrependedContainer([]);
@@ -83,18 +61,6 @@ class ReactolithBundlePrependTest extends TestCase
         $method->invoke($bundle, $configurator, $builder);
 
         return $builder;
-    }
-
-    private function collectFormThemes(array $twigConfigs): array
-    {
-        $themes = [];
-        foreach ($twigConfigs as $config) {
-            if (isset($config['form_themes'])) {
-                $themes = array_merge($themes, $config['form_themes']);
-            }
-        }
-
-        return $themes;
     }
 
     private function collectGlobals(array $twigConfigs): array

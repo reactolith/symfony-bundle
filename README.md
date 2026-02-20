@@ -4,12 +4,14 @@ Symfony integration for [Reactolith](https://github.com/reactolith/reactolith) -
 
 **Write your UI in Twig. Get React-powered interactive components. No JavaScript in your Symfony code.**
 
-Reactolith lets you render HTML with custom tags like `<ui-button>`, `<ui-input>`, `<ui-select>` from your Symfony backend. On the client side, Reactolith automatically hydrates these tags into fully interactive React components. This bundle provides the Symfony-side integration:
+Reactolith lets you render HTML with custom tags like `<ui-button>`, `<ui-input>`, `<ui-select>` from your Symfony backend. On the client side, Reactolith automatically hydrates these tags into fully interactive React components.
 
-- **Twig Form Theme** -- Symfony forms automatically render `<ui-*>` HTML tags
+This bundle provides the Symfony-side integration:
+
 - **`re_attrs` Filter** -- Renders prop objects as correct HTML attributes (string, boolean, JSON)
 - **HTTP/2 Preload** -- Optional event listener that sends `X-Reactolith-Components` header with all tags on the page
 - **Custom FormTypes** -- `SwitchType` and more
+- **Form Theme** -- Optional Twig form theme for [reactolith/ui](https://github.com/reactolith/ui) (shadcn-based components)
 
 ## Requirements
 
@@ -19,231 +21,13 @@ Reactolith lets you render HTML with custom tags like `<ui-button>`, `<ui-input>
 ## Installation
 
 ```bash
-composer require reactolith/symfony-bundle pentatrion/vite-bundle
+composer require reactolith/symfony-bundle
 ```
 
-Add the bundle to `config/bundles.php`:
+The bundle registers itself automatically via Symfony Flex. If you're not using Flex, add it manually to `config/bundles.php`:
 
 ```php
-return [
-    // ...
-    Pentatrion\ViteBundle\PentatrionViteBundle::class => ['all' => true],
-    Reactolith\SymfonyBundle\ReactolithBundle::class => ['all' => true],
-];
-```
-
-> **Note**: `pentatrion/vite-bundle` is registered automatically by Symfony Flex (with `allow-contrib: true`). `ReactolithBundle` must be added manually until the [Flex recipe](https://github.com/symfony/recipes-contrib) is merged.
-
-## Quick Start
-
-### 1. Install frontend dependencies
-
-```bash
-npm install reactolith react react-dom @loadable/component
-npm install -D vite vite-plugin-symfony @vitejs/plugin-react @tailwindcss/vite tailwindcss
-```
-
-### 2. Vite configuration
-
-```ts
-// vite.config.ts
-import symfonyPlugin from "vite-plugin-symfony";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-    plugins: [react(), tailwindcss(), symfonyPlugin()],
-    build: {
-        rollupOptions: {
-            input: {
-                app: "./assets/app.ts",
-            },
-        },
-    },
-});
-```
-
-### 3. CSS entry point
-
-```css
-/* assets/app.css */
-@import "tailwindcss";
-```
-
-### 4. JavaScript entry point
-
-Create `assets/app.ts` with the Reactolith setup:
-
-```ts
-// assets/app.ts
-import "./app.css";
-import loadable from "@loadable/component";
-import { App } from "reactolith";
-
-const component = loadable(
-    async ({ is }: { is: string }) => {
-        return import(`./components/ui/${is.substring(3)}.tsx`);
-    },
-    {
-        cacheKey: ({ is }) => is,
-        resolveComponent: (mod, { is }: { is: string }) => {
-            const cmpName = is
-                .substring(3)
-                .replace(/(^\w|-\w)/g, (match) =>
-                    match.replace(/-/, "").toUpperCase()
-                );
-            return mod[cmpName];
-        },
-    }
-);
-
-new App(component);
-```
-
-This maps `<ui-button>` to `./components/ui/button.tsx`, `<ui-input>` to `./components/ui/input.tsx`, etc. The `substring(3)` strips the `ui-` prefix.
-
-### 5. Create your React components
-
-Place your component files in `assets/components/ui/`. Each file should export a named component that matches its tag name in PascalCase:
-
-```tsx
-// assets/components/ui/button.tsx
-import React from "react";
-
-export function Button({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-    return <button className="px-4 py-2 rounded bg-primary text-primary-foreground" {...props}>{children}</button>;
-}
-```
-
-### 6. Base template
-
-```twig
-{# templates/base.html.twig #}
-<!DOCTYPE html>
-<html>
-    <head>
-        {% block stylesheets %}
-            {{ vite_entry_link_tags('app') }}
-        {% endblock %}
-        {% block javascripts %}
-            {{ vite_entry_script_tags('app', { dependency: 'react' }) }}
-        {% endblock %}
-    </head>
-    <body>
-        <div id="reactolith-app">
-            {% block body %}{% endblock %}
-        </div>
-    </body>
-</html>
-```
-
-> **Important**: The `<div id="reactolith-app">` wrapper is required -- Reactolith uses it as the root element for React hydration.
-
-Vite asset tags are handled entirely by `pentatrion/vite-bundle` -- the Reactolith bundle does not duplicate this.
-
-### 7. Use components in Twig
-
-```twig
-{# Directly in templates #}
-<ui-button variant="outline" size="lg">Click me</ui-button>
-
-{# With dynamic props via re_attrs #}
-<ui-toaster position="top-right" rich-colors {{ {toasts: toasts}|re_attrs }} />
-
-{# Forms render automatically as <ui-*> tags #}
-{{ form(form) }}
-```
-
-### 8. Run the dev server
-
-```bash
-npx vite         # Start Vite dev server
-php -S localhost:8000 -t public  # Start Symfony dev server (or use symfony serve)
-```
-
-### Resulting HTML Output
-
-The form theme transforms Symfony forms into Reactolith-compatible HTML:
-
-```html
-<form name="contact" method="post">
-  <div class="space-y-2">
-    <ui-label for="contact_name">Your Name</ui-label>
-    <ui-input type="text" id="contact_name" name="contact[name]" required />
-  </div>
-  <div class="space-y-2">
-    <ui-label for="contact_email">Email</ui-label>
-    <ui-input type="email" id="contact_email" name="contact[email]" required />
-  </div>
-  <div class="space-y-2">
-    <ui-button type="submit">Submit</ui-button>
-  </div>
-</form>
-```
-
-## Using shadcn/ui components
-
-Instead of writing your own components, you can use [shadcn/ui](https://ui.shadcn.com/) or [Reactolith UI](https://reactolith.github.io/ui/) to get pre-built, styled components that work with Reactolith.
-
-### Option A: Start with shadcn/create (recommended for new projects)
-
-The fastest way to get a working setup with styled components:
-
-```bash
-npx shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=neutral&theme=neutral&iconLibrary=lucide&font=inter&menuAccent=subtle&menuColor=default&radius=default&template=vite&rtl=false" --template vite
-```
-
-This scaffolds a complete Vite + React + Tailwind + shadcn/ui project. Then copy the generated `src/components/ui/` directory into your Symfony project's `assets/components/ui/` folder and adapt the entry point.
-
-### Option B: Add shadcn components to an existing project
-
-```bash
-npx shadcn@latest init
-npx shadcn@latest add button input textarea select checkbox label
-```
-
-This creates components in `src/components/ui/` (or your configured path). Move them to `assets/components/ui/` and adjust imports as needed.
-
-### Option C: Use the Reactolith UI registry
-
-[Reactolith UI](https://reactolith.github.io/ui/) provides a shadcn-compatible component registry specifically tailored for Reactolith:
-
-```bash
-npx shadcn@latest add npx shadcn@latest add https://reactolith.github.io/ui/r/button.json npx shadcn@latest add https://reactolith.github.io/ui/r/input.json
-```
-
-These components are pre-configured to work seamlessly with Reactolith's hydration model.
-
-### shadcn/ui entry point example
-
-With shadcn/ui components in place, your `app.ts` stays the same -- the loadable resolver maps `<ui-button>` to `button.tsx`, `<ui-input>` to `input.tsx`, etc. Since shadcn components use named exports, the `resolveComponent` callback handles the PascalCase conversion:
-
-```ts
-// assets/app.ts
-import "./app.css";
-import loadable from "@loadable/component";
-import { App } from "reactolith";
-
-const component = loadable(
-    async ({ is }: { is: string }) => {
-        return import(`./components/ui/${is.substring(3)}.tsx`);
-    },
-    {
-        cacheKey: ({ is }) => is,
-        resolveComponent: (mod, { is }: { is: string }) => {
-            // ui-button -> Button, ui-radio-group -> RadioGroup
-            const cmpName = is
-                .substring(3)
-                .replace(/(^\w|-\w)/g, (match) =>
-                    match.replace(/-/, "").toUpperCase()
-                );
-            return mod[cmpName];
-        },
-    }
-);
-
-new App(component);
+Reactolith\SymfonyBundle\ReactolithBundle::class => ['all' => true],
 ```
 
 ## Configuration
@@ -251,26 +35,15 @@ new App(component);
 ```yaml
 # config/packages/reactolith.yaml
 reactolith:
-  tag_prefix: 'ui-'          # must match /^[a-z][a-z0-9]*-$/
-  preload:
-    enabled: false            # opt-in HTTP/2 preload headers
-  form_theme:
-    enabled: true             # auto-registers the form theme globally
-```
-
-Shorthand:
-
-```yaml
-reactolith:
-  preload: true               # same as preload: { enabled: true }
-  form_theme: false            # same as form_theme: { enabled: false }
+    tag_prefix: 'ui-'   # HTML tag prefix, must match /^[a-z][a-z0-9]*-$/
+    preload:
+        enabled: false  # opt-in: sends X-Reactolith-Components response header
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `tag_prefix` | `ui-` | HTML tag prefix. Must be lowercase, ending with `-`. |
+| `tag_prefix` | `ui-` | HTML tag prefix for components. Must be lowercase, ending with `-`. |
 | `preload` | `false` | Enable the HTTP/2 component preload listener. |
-| `form_theme` | `true` | Auto-register the Reactolith form theme globally. |
 
 ## `re_attrs` Filter / Function
 
@@ -302,8 +75,8 @@ When enabled, the listener scans each HTML response for `<ui-*>` tags and adds a
 
 ```yaml
 reactolith:
-  preload:
-    enabled: true
+    preload:
+        enabled: true
 ```
 
 ```
@@ -312,7 +85,288 @@ X-Reactolith-Components: ui-button, ui-input, ui-label, ui-toaster
 
 A reverse proxy or CDN can use this header to push the corresponding JavaScript chunks via HTTP/2.
 
-## Form Theme
+## Custom Tag Prefix
+
+```yaml
+reactolith:
+    tag_prefix: 'x-'
+```
+
+```html
+<x-input type="text" ... />
+<x-button type="submit">Submit</x-button>
+```
+
+The prefix is available in Twig as the global `{{ reactolith_tag_prefix }}`.
+
+---
+
+## Using with reactolith/ui (shadcn)
+
+[reactolith/ui](https://github.com/reactolith/ui) is a shadcn-based component library that works seamlessly with this bundle. The following steps set up a complete Symfony + Vite + React + shadcn/ui stack.
+
+### 1. Install frontend dependencies
+
+```bash
+npm install reactolith react react-dom @loadable/component
+npm install -D vite vite-plugin-symfony @vitejs/plugin-react @tailwindcss/vite tailwindcss
+```
+
+For shadcn/ui components:
+
+```bash
+npm install @base-ui/react class-variance-authority clsx tailwind-merge lucide-react
+npm install -D @types/react @types/loadable__component
+```
+
+Optional (for enhanced styling):
+
+```bash
+npm install @fontsource-variable/inter tw-animate-css
+```
+
+### 2. Install pentatrion/vite-bundle
+
+```bash
+composer require pentatrion/vite-bundle
+```
+
+### 3. Initialize shadcn/ui with reactolith/ui registry
+
+```bash
+npx shadcn@latest init
+```
+
+When prompted, configure:
+- TypeScript: Yes
+- Style: base-nova (or your preference)
+- Base color: neutral (or your preference)
+- CSS variables: Yes
+- Import alias: @/*
+- React Server Components: No
+
+After initialization, update `components.json` to include the reactolith/ui registry:
+
+```json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-nova",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "assets/app.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "rtl": false,
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {
+    "@reactolith": "https://reactolith.github.io/ui/r/{name}.json"
+  }
+}
+```
+
+### 4. Add reactolith/ui components
+
+```bash
+npx shadcn@latest add @reactolith/button @reactolith/input @reactolith/label @reactolith/textarea
+```
+
+Components will be created in `assets/components/app/`.
+
+### 5. Vite configuration
+
+```js
+// vite.config.js
+import path from "path"
+import symfonyPlugin from "vite-plugin-symfony";
+import tailwindcss from "@tailwindcss/vite"
+import react from "@vitejs/plugin-react"
+import { defineConfig } from "vite"
+
+export default defineConfig({
+    plugins: [
+        react(),
+        tailwindcss(),
+        symfonyPlugin({ refresh: true }),
+    ],
+    resolve: {
+        alias: {
+            "@": path.resolve(__dirname, "./assets"),
+        },
+    },
+    build: {
+        rollupOptions: {
+            input: {
+                app: "./assets/app.ts",
+            },
+        },
+    },
+});
+```
+
+### 6. TypeScript configuration
+
+Create `tsconfig.json`:
+
+```json
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@/*": ["./assets/*"] }
+  }
+}
+```
+
+Create `tsconfig.app.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["./assets/*"] }
+  },
+  "include": ["assets"]
+}
+```
+
+Create `tsconfig.node.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "strict": true
+  },
+  "include": ["vite.config.js"]
+}
+```
+
+### 7. CSS entry point
+
+```css
+/* assets/app.css */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Theme variables are auto-generated by shadcn init */
+```
+
+### 8. JavaScript entry point
+
+Create `assets/app.ts`:
+
+```ts
+import "./app.css";
+import loadable from "@loadable/component";
+import { App } from "reactolith";
+import type { ComponentType } from "react";
+
+const modules = import.meta.glob<{ default: ComponentType<any> }>("@/components/app/**/*.tsx");
+
+new App(
+    loadable(({ is }: { is: string }) => {
+        const name = is.substring(3)
+        const match = Object.keys(modules).find(key => key.endsWith(`/${name}.tsx`));
+        if (!match) throw new Error(`Component not found: ${is}`);
+        return modules[match]();
+    }, {
+        cacheKey: ({ is }: { is: string }) => is,
+    }) as unknown as ComponentType<Record<string, unknown>>,
+);
+```
+
+This uses Vite's `import.meta.glob` to dynamically load components from `assets/components/app/`. Each component maps to `<ui-{name}>` by stripping the `ui-` prefix.
+
+### 9. Base template
+
+```twig
+{# templates/base.html.twig #}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}Welcome!{% endblock %}</title>
+        {% block stylesheets %}
+            {{ vite_entry_link_tags('app') }}
+        {% endblock %}
+        {% block javascripts %}
+            {{ vite_entry_script_tags('app', { dependency: 'react' }) }}
+        {% endblock %}
+    </head>
+    <body>
+        <div id="reactolith-app">
+            {% block body %}{% endblock %}
+        </div>
+    </body>
+</html>
+```
+
+The `<div id="reactolith-app">` wrapper is required -- Reactolith uses it as the root element for React hydration.
+
+### 10. Run the dev server
+
+```bash
+npx vite         # Start Vite dev server
+symfony serve    # Start Symfony dev server
+```
+
+---
+
+## Form Theme (reactolith/ui)
+
+This bundle ships a Twig form theme that maps standard Symfony form types to `<ui-*>` tags. It is designed for use with reactolith/ui components.
+
+To activate it, add it to your Twig configuration:
+
+```yaml
+# config/packages/twig.yaml
+twig:
+    form_themes:
+        - '@Reactolith/form/reactolith_layout.html.twig'
+```
+
+Or apply it per form in a template:
+
+```twig
+{% form_theme form '@Reactolith/form/reactolith_layout.html.twig' %}
+```
 
 ### Supported Mappings
 
@@ -358,27 +412,7 @@ $builder->add('darkMode', SwitchType::class, ['label' => 'Enable dark mode']);
 <ui-switch id="form_darkMode" name="form[darkMode]" json-checked="false" />
 ```
 
-### Custom Tag Prefix
-
-```yaml
-reactolith:
-  tag_prefix: 'x-'
-```
-
-```html
-<x-input type="text" ... />
-<x-button type="submit">Submit</x-button>
-```
-
-### Overriding the Form Theme
-
-Per form:
-
-```twig
-{% form_theme form '@Reactolith/form/reactolith_layout.html.twig' %}
-```
-
-Extend it:
+### Extending the Form Theme
 
 ```twig
 {# templates/form/my_theme.html.twig #}
@@ -392,15 +426,3 @@ Extend it:
 </div>
 {% endblock %}
 ```
-
-Disable global registration:
-
-```yaml
-reactolith:
-  form_theme:
-    enabled: false
-```
-
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.

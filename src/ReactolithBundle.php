@@ -27,10 +27,6 @@ class ReactolithBundle extends AbstractBundle
                     ->canBeEnabled()
                     ->info('Enable HTTP/2 preload headers for Reactolith components')
                 ->end()
-                ->arrayNode('form_theme')
-                    ->canBeDisabled()
-                    ->info('Auto-registers the form theme globally')
-                ->end()
             ->end()
         ;
     }
@@ -40,13 +36,6 @@ class ReactolithBundle extends AbstractBundle
         $configs = $builder->getExtensionConfig('reactolith');
         $config = $configs ? array_replace_recursive(...array_reverse($configs)) : [];
         $tagPrefix = $config['tag_prefix'] ?? 'ui-';
-        $formThemeEnabled = $config['form_theme']['enabled'] ?? true;
-
-        if ($formThemeEnabled) {
-            $builder->prependExtensionConfig('twig', [
-                'form_themes' => ['@Reactolith/form/reactolith_layout.html.twig'],
-            ]);
-        }
 
         $builder->prependExtensionConfig('twig', [
             'globals' => [
