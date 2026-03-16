@@ -27,6 +27,10 @@ class ReactolithBundle extends AbstractBundle
                     ->canBeEnabled()
                     ->info('Enable HTTP/2 preload headers for Reactolith components')
                 ->end()
+                ->arrayNode('form_theme')
+                    ->canBeEnabled()
+                    ->info('Auto-register the Reactolith form theme (requires symfony/form)')
+                ->end()
             ->end()
         ;
     }
@@ -42,6 +46,15 @@ class ReactolithBundle extends AbstractBundle
                 'reactolith_tag_prefix' => $tagPrefix,
             ],
         ]);
+
+        $formThemeEnabled = $config['form_theme']['enabled'] ?? false;
+        if ($formThemeEnabled && class_exists(\Symfony\Component\Form\AbstractType::class)) {
+            $builder->prependExtensionConfig('twig', [
+                'form_themes' => [
+                    '@Reactolith/form/reactolith_layout.html.twig',
+                ],
+            ]);
+        }
     }
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void

@@ -37,13 +37,16 @@ Reactolith\SymfonyBundle\ReactolithBundle::class => ['all' => true],
 reactolith:
     tag_prefix: 'ui-'   # HTML tag prefix, must match /^[a-z][a-z0-9]*-$/
     preload:
-        enabled: false  # opt-in: sends X-Reactolith-Components response header
+        enabled: false   # opt-in: sends X-Reactolith-Components response header
+    form_theme:
+        enabled: false   # opt-in: auto-registers the Reactolith form theme (requires symfony/form)
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `tag_prefix` | `ui-` | HTML tag prefix for components. Must be lowercase, ending with `-`. |
 | `preload` | `false` | Enable the HTTP/2 component preload listener. |
+| `form_theme` | `false` | Auto-register the Reactolith Twig form theme. Requires `symfony/form`. |
 
 ## `re_attrs` Filter / Function
 
@@ -353,7 +356,20 @@ symfony serve    # Start Symfony dev server
 
 This bundle ships a Twig form theme that maps standard Symfony form types to `<ui-*>` tags. It is designed for use with reactolith/ui components.
 
-To activate it, add it to your Twig configuration:
+> **Note:** The form theme requires `symfony/form`. Install it separately if it's not already in your project: `composer require symfony/form`
+
+### Activation
+
+**Option A: Auto-register via bundle config** (recommended):
+
+```yaml
+# config/packages/reactolith.yaml
+reactolith:
+    form_theme:
+        enabled: true
+```
+
+**Option B: Manual Twig config:**
 
 ```yaml
 # config/packages/twig.yaml
@@ -362,7 +378,7 @@ twig:
         - '@Reactolith/form/reactolith_layout.html.twig'
 ```
 
-Or apply it per form in a template:
+**Option C: Per-form in a template:**
 
 ```twig
 {% form_theme form '@Reactolith/form/reactolith_layout.html.twig' %}

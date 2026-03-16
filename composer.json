@@ -15,7 +15,6 @@
     "require": {
         "php": ">=8.2",
         "symfony/event-dispatcher": "^6.4 || ^7.0 || ^8.0",
-        "symfony/form": "^6.4 || ^7.0 || ^8.0",
         "symfony/framework-bundle": "^6.4 || ^7.0 || ^8.0",
         "symfony/http-kernel": "^6.4 || ^7.0 || ^8.0",
         "symfony/twig-bundle": "^6.4 || ^7.0 || ^8.0",
@@ -23,11 +22,13 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0 || ^11.0",
+        "symfony/form": "^6.4 || ^7.0 || ^8.0",
         "symfony/phpunit-bridge": "^6.4 || ^7.0 || ^8.0",
         "symfony/translation": "^6.4 || ^7.0 || ^8.0"
     },
     "suggest": {
-        "pentatrion/vite-bundle": "Recommended for Vite asset integration (vite_entry_script_tags / vite_entry_link_tags)"
+        "pentatrion/vite-bundle": "Recommended for Vite asset integration (vite_entry_script_tags / vite_entry_link_tags)",
+        "symfony/form": "Required for the Reactolith form theme and SwitchType"
     },
     "autoload": {
         "psr-4": {

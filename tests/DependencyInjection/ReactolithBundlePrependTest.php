@@ -31,6 +31,28 @@ class ReactolithBundlePrependTest extends TestCase
         $this->assertSame('x-', $globals['reactolith_tag_prefix']);
     }
 
+    public function testPrependRegistersFormThemeWhenEnabled(): void
+    {
+        $builder = $this->createPrependedContainer([
+            'form_theme' => ['enabled' => true],
+        ]);
+
+        $twigConfigs = $builder->getExtensionConfig('twig');
+        $formThemes = $this->collectFormThemes($twigConfigs);
+
+        $this->assertContains('@Reactolith/form/reactolith_layout.html.twig', $formThemes);
+    }
+
+    public function testPrependDoesNotRegisterFormThemeWhenDisabled(): void
+    {
+        $builder = $this->createPrependedContainer([]);
+
+        $twigConfigs = $builder->getExtensionConfig('twig');
+        $formThemes = $this->collectFormThemes($twigConfigs);
+
+        $this->assertNotContains('@Reactolith/form/reactolith_layout.html.twig', $formThemes);
+    }
+
     private function createPrependedContainer(array $bundleConfig): ContainerBuilder
     {
         $bundle = new ReactolithBundle();
@@ -73,5 +95,17 @@ class ReactolithBundlePrependTest extends TestCase
         }
 
         return $globals;
+    }
+
+    private function collectFormThemes(array $twigConfigs): array
+    {
+        $themes = [];
+        foreach ($twigConfigs as $config) {
+            if (isset($config['form_themes'])) {
+                $themes = array_merge($themes, $config['form_themes']);
+            }
+        }
+
+        return $themes;
     }
 }
