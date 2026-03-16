@@ -26,6 +26,7 @@ class ConfigurationTest extends TestCase
 
         $this->assertSame('ui-', $config['tag_prefix']);
         $this->assertFalse($config['preload']['enabled']);
+        $this->assertFalse($config['form_theme']['enabled']);
     }
 
     public function testCustomTagPrefix(): void
@@ -83,15 +84,35 @@ class ConfigurationTest extends TestCase
         $this->assertTrue($config['preload']['enabled']);
     }
 
+    public function testFormThemeCanBeEnabled(): void
+    {
+        $config = $this->process([
+            'form_theme' => ['enabled' => true],
+        ]);
+
+        $this->assertTrue($config['form_theme']['enabled']);
+    }
+
+    public function testFormThemeShorthandEnable(): void
+    {
+        $config = $this->process([
+            'form_theme' => true,
+        ]);
+
+        $this->assertTrue($config['form_theme']['enabled']);
+    }
+
     public function testFullCustomConfig(): void
     {
         $config = $this->process([
             'tag_prefix' => 'app-',
             'preload' => ['enabled' => true],
+            'form_theme' => ['enabled' => true],
         ]);
 
         $this->assertSame('app-', $config['tag_prefix']);
         $this->assertTrue($config['preload']['enabled']);
+        $this->assertTrue($config['form_theme']['enabled']);
     }
 
     public function testTreeBuilderRootName(): void

@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\ButtonType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -123,7 +124,19 @@ class FormThemeTest extends TestCase
         $html = $this->renderWidget($form->get('message'));
 
         $this->assertStringContainsString('<ui-textarea', $html);
-        $this->assertStringContainsString('</ui-textarea>', $html);
+        $this->assertStringContainsString('/>', $html);
+        $this->assertStringNotContainsString('</ui-textarea>', $html);
+    }
+
+    public function testTextareaRendersValueAsAttribute(): void
+    {
+        $form = $this->formFactory->createBuilder()
+            ->add('message', TextareaType::class, ['data' => 'Hello world'])
+            ->getForm();
+
+        $html = $this->renderWidget($form->get('message'));
+
+        $this->assertStringContainsString('value="Hello world"', $html);
     }
 
     public function testChoiceCollapsedRendersAsUiSelect(): void
@@ -145,6 +158,35 @@ class FormThemeTest extends TestCase
         $this->assertStringContainsString('value="red"', $html);
         $this->assertStringContainsString('value="blue"', $html);
         $this->assertStringContainsString('value="green"', $html);
+    }
+
+    public function testChoiceCollapsedHasIdOnRootElement(): void
+    {
+        $form = $this->formFactory->createBuilder()
+            ->add('color', ChoiceType::class, [
+                'choices' => ['Red' => 'red'],
+            ])
+            ->getForm();
+
+        $html = $this->renderWidget($form->get('color'));
+
+        // id should be on <ui-select>, not on <ui-select-trigger>
+        $this->assertMatchesRegularExpression('/<ui-select[^>]+id="/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<ui-select-trigger[^>]+id="/', $html);
+    }
+
+    public function testChoiceCollapsedHasHiddenInputForFormSubmission(): void
+    {
+        $form = $this->formFactory->createBuilder()
+            ->add('color', ChoiceType::class, [
+                'choices' => ['Red' => 'red'],
+            ])
+            ->getForm();
+
+        $html = $this->renderWidget($form->get('color'));
+
+        $this->assertStringContainsString('<input type="hidden"', $html);
+        $this->assertStringContainsString('name="form[color]"', $html);
     }
 
     public function testChoiceExpandedRadioRendersAsUiRadioGroup(): void
@@ -261,6 +303,34 @@ class FormThemeTest extends TestCase
 
         $this->assertStringContainsString('text-sm text-muted-foreground', $html);
         $this->assertStringContainsString('Enter your primary email address', $html);
+    }
+
+    public function testHiddenTypeRendersAsNativeInput(): void
+    {
+        $form = $this->formFactory->createBuilder()
+            ->add('token', HiddenType::class)
+            ->getForm();
+
+        $html = $this->renderWidget($form->get('token'));
+
+        $this->assertStringContainsString('<input type="hidden"', $html);
+        $this->assertStringNotContainsString('<ui-input', $html);
+    }
+
+    public function testWidgetOutputHasNoExcessiveWhitespace(): void
+    {
+        $form = $this->formFactory->createBuilder()
+            ->add('name', TextType::class, [
+                'required' => true,
+                'attr' => ['placeholder' => 'Enter name'],
+            ])
+            ->getForm();
+
+        $html = $this->renderWidget($form->get('name'));
+
+        // Should not have multiple consecutive spaces in attribute area
+        $this->assertDoesNotMatchRegularExpression('/\s{2,}required/', $html);
+        $this->assertDoesNotMatchRegularExpression('/\s{2,}placeholder/', $html);
     }
 
     private function renderWidget($formView): string

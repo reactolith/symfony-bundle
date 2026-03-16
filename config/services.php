@@ -11,6 +11,8 @@ return function (ContainerConfigurator $container): void {
     $services->set('reactolith.twig_extension', ReactolithTwigExtension::class)
         ->tag('twig.extension');
 
-    $services->set(SwitchType::class)
-        ->tag('form.type');
+    if (class_exists(\Symfony\Component\Form\AbstractType::class)) {
+        $services->set(SwitchType::class)
+            ->tag('form.type');
+    }
 };
