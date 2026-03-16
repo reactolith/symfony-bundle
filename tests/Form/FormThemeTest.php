@@ -124,8 +124,8 @@ class FormThemeTest extends TestCase
         $html = $this->renderWidget($form->get('message'));
 
         $this->assertStringContainsString('<ui-textarea', $html);
-        $this->assertStringContainsString('/>', $html);
-        $this->assertStringNotContainsString('</ui-textarea>', $html);
+        $this->assertStringNotContainsString('/>', $html);
+        $this->assertStringContainsString('></ui-textarea>', $html);
     }
 
     public function testTextareaRendersValueAsAttribute(): void

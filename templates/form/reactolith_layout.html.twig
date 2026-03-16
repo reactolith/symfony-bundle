@@ -37,7 +37,7 @@
   {%- if attr.placeholder is defined %} placeholder="{{ attr.placeholder }}"{% endif -%}
   {%- if attr.class is defined %} class="{{ attr.class }}"{% endif -%}
   {%- for key, val in attr %}{% if key not in ['placeholder', 'class'] %} {{ key }}="{{ val }}"{% endif %}{% endfor -%}
-/>
+></{{ _prefix }}input>
 {%- endif -%}
 {%- endblock %}
 
@@ -50,7 +50,7 @@
   {%- if attr.placeholder is defined %} placeholder="{{ attr.placeholder }}"{% endif -%}
   {%- if attr.rows is defined %} rows="{{ attr.rows }}"{% endif -%}
   {%- for key, val in attr %}{% if key not in ['placeholder', 'rows'] %} {{ key }}="{{ val }}"{% endif %}{% endfor -%}
-/>
+></{{ _prefix }}textarea>
 {%- endblock %}
 
 {%- block checkbox_widget -%}
@@ -61,7 +61,7 @@
   {%- if required %} required{% endif -%}
   {%- if disabled %} disabled{% endif -%}
   {%- for key, val in attr %} {{ key }}="{{ val }}"{% endfor -%}
-/>
+></{{ _prefix }}checkbox>
 {%- endblock %}
 
 {%- block choice_widget_collapsed -%}
@@ -71,7 +71,7 @@
   {%- if disabled %} disabled{% endif -%}
 >
   <{{ _prefix }}select-trigger>
-    <{{ _prefix }}select-value placeholder="{{ placeholder|default('Select...') }}" />
+    <{{ _prefix }}select-value placeholder="{{ placeholder|default('Select...') }}"></{{ _prefix }}select-value>
   </{{ _prefix }}select-trigger>
   <{{ _prefix }}select-content>
     {% if placeholder is not none and not required -%}
@@ -118,7 +118,7 @@
   >
     {%- for child in form %}
       <div class="flex items-center space-x-2">
-        <{{ _prefix }}radio-group-item value="{{ child.vars.value }}" id="{{ child.vars.id }}" />
+        <{{ _prefix }}radio-group-item value="{{ child.vars.value }}" id="{{ child.vars.id }}"></{{ _prefix }}radio-group-item>
         <{{ _prefix }}label for="{{ child.vars.id }}">{{ translation_domain is same as(false) ? child.vars.label : child.vars.label|trans({}, translation_domain) }}</{{ _prefix }}label>
       </div>
     {%- endfor %}
@@ -161,5 +161,5 @@
   {%- if required %} required{% endif -%}
   {%- if disabled %} disabled{% endif -%}
   {%- for key, val in attr %} {{ key }}="{{ val }}"{% endfor -%}
-/>
+></{{ _prefix }}switch>
 {%- endblock %}
