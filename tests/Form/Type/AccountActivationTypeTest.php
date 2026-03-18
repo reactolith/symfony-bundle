@@ -7,15 +7,19 @@ use Reactolith\SymfonyBundle\Form\Type\AccountActivationType;
 use Reactolith\SymfonyBundle\Form\Type\CardFormType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Forms;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class AccountActivationTypeTest extends TestCase
 {
     private AccountActivationType $type;
+    private $formFactory;
 
     protected function setUp(): void
     {
         $this->type = new AccountActivationType();
+        $this->formFactory = Forms::createFormFactoryBuilder()
+            ->addType(new CardFormType())
+            ->addType(new AccountActivationType())
+            ->getFormFactory();
     }
 
     public function testGetBlockPrefix(): void
@@ -30,45 +34,28 @@ class AccountActivationTypeTest extends TestCase
 
     public function testDefaultOptions(): void
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefined([
-            'card_title', 'card_description', 'card_footer_text',
-            'card_footer_link_label', 'card_footer_link_url',
-            'social_providers', 'login_url', 'csrf_protection',
-        ]);
+        $form = $this->formFactory->create(AccountActivationType::class);
+        $options = $form->getConfig()->getOptions();
 
-        $this->type->configureOptions($resolver);
-
-        $resolved = $resolver->resolve([]);
-        $this->assertSame('Activate your account', $resolved['card_title']);
-        $this->assertSame('Click the button below to activate your account', $resolved['card_description']);
+        $this->assertSame('Activate your account', $options['card_title']);
+        $this->assertSame('Click the button below to activate your account', $options['card_description']);
     }
 
-    public function testLoginUrlSetsCardFooter(): void
+    public function testLoginUrlSetsFooterInView(): void
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefined([
-            'card_title', 'card_description', 'card_footer_text',
-            'card_footer_link_label', 'card_footer_link_url',
-            'social_providers', 'login_url', 'csrf_protection',
+        $form = $this->formFactory->create(AccountActivationType::class, null, [
+            'login_url' => '/login',
         ]);
+        $view = $form->createView();
 
-        $this->type->configureOptions($resolver);
-
-        $resolved = $resolver->resolve(['login_url' => '/login']);
-        $this->assertSame('Already activated?', $resolved['card_footer_text']);
-        $this->assertSame('Login', $resolved['card_footer_link_label']);
-        $this->assertSame('/login', $resolved['card_footer_link_url']);
+        $this->assertSame('Already activated?', $view->vars['card_footer_text']);
+        $this->assertSame('Login', $view->vars['card_footer_link_label']);
+        $this->assertSame('/login', $view->vars['card_footer_link_url']);
     }
 
     public function testBuildFormAddsOnlySubmit(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new AccountActivationType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(AccountActivationType::class);
+        $form = $this->formFactory->create(AccountActivationType::class);
 
         $this->assertTrue($form->has('submit'));
         $this->assertCount(1, $form);
@@ -76,12 +63,7 @@ class AccountActivationTypeTest extends TestCase
 
     public function testSubmitFieldIsSubmitType(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new AccountActivationType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(AccountActivationType::class);
+        $form = $this->formFactory->create(AccountActivationType::class);
 
         $this->assertInstanceOf(
             SubmitType::class,

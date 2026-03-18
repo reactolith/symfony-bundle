@@ -5,6 +5,8 @@ namespace Reactolith\SymfonyBundle\Form\Type;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class AccountActivationType extends AbstractType
@@ -23,8 +25,15 @@ class AccountActivationType extends AbstractType
             'card_description' => 'Click the button below to activate your account',
             'login_url' => null,
         ]);
+    }
 
-        CardFormType::configureFooterLink($resolver, 'login_url', 'Already activated?', 'Login');
+    public function buildView(FormView $view, FormInterface $form, array $options): void
+    {
+        if ($options['login_url']) {
+            $view->vars['card_footer_text'] = 'Already activated?';
+            $view->vars['card_footer_link_label'] = 'Login';
+            $view->vars['card_footer_link_url'] = $options['login_url'];
+        }
     }
 
     public function getParent(): string

@@ -53,8 +53,15 @@ class LoginType extends AbstractType
             'signup_url' => null,
             'remember_me' => false,
         ]);
+    }
 
-        CardFormType::configureFooterLink($resolver, 'signup_url', "Don't have an account?", 'Sign up');
+    public function buildView(FormView $view, FormInterface $form, array $options): void
+    {
+        if ($options['signup_url']) {
+            $view->vars['card_footer_text'] = "Don't have an account?";
+            $view->vars['card_footer_link_label'] = 'Sign up';
+            $view->vars['card_footer_link_url'] = $options['signup_url'];
+        }
     }
 
     public function finishView(FormView $view, FormInterface $form, array $options): void

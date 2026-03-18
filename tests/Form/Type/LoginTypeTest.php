@@ -10,15 +10,19 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Forms;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class LoginTypeTest extends TestCase
 {
     private LoginType $type;
+    private $formFactory;
 
     protected function setUp(): void
     {
         $this->type = new LoginType();
+        $this->formFactory = Forms::createFormFactoryBuilder()
+            ->addType(new CardFormType())
+            ->addType(new LoginType())
+            ->getFormFactory();
     }
 
     public function testGetBlockPrefix(): void
@@ -31,54 +35,41 @@ class LoginTypeTest extends TestCase
         $this->assertSame(CardFormType::class, $this->type->getParent());
     }
 
-
-
     public function testDefaultOptions(): void
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefined([
-            'card_title', 'card_description', 'card_footer_text',
-            'card_footer_link_label', 'card_footer_link_url',
-            'social_providers', 'forgot_password_url', 'signup_url',
-            'remember_me', 'csrf_protection',
-        ]);
+        $form = $this->formFactory->create(LoginType::class);
+        $options = $form->getConfig()->getOptions();
 
-        $this->type->configureOptions($resolver);
-
-        $resolved = $resolver->resolve([]);
-        $this->assertSame('Login', $resolved['card_title']);
-        $this->assertSame('Enter your email below to login to your account', $resolved['card_description']);
-        $this->assertNull($resolved['forgot_password_url']);
-        $this->assertNull($resolved['signup_url']);
-        $this->assertFalse($resolved['remember_me']);
+        $this->assertSame('Login', $options['card_title']);
+        $this->assertSame('Enter your email below to login to your account', $options['card_description']);
+        $this->assertNull($options['forgot_password_url']);
+        $this->assertNull($options['signup_url']);
+        $this->assertFalse($options['remember_me']);
     }
 
-    public function testSignupUrlSetsCardFooter(): void
+    public function testSignupUrlSetsFooterInView(): void
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefined([
-            'card_title', 'card_description', 'card_footer_text',
-            'card_footer_link_label', 'card_footer_link_url',
-            'social_providers', 'forgot_password_url', 'signup_url',
-            'remember_me', 'csrf_protection',
+        $form = $this->formFactory->create(LoginType::class, null, [
+            'signup_url' => '/register',
         ]);
+        $view = $form->createView();
 
-        $this->type->configureOptions($resolver);
+        $this->assertSame("Don't have an account?", $view->vars['card_footer_text']);
+        $this->assertSame('Sign up', $view->vars['card_footer_link_label']);
+        $this->assertSame('/register', $view->vars['card_footer_link_url']);
+    }
 
-        $resolved = $resolver->resolve(['signup_url' => '/register']);
-        $this->assertSame("Don't have an account?", $resolved['card_footer_text']);
-        $this->assertSame('Sign up', $resolved['card_footer_link_label']);
-        $this->assertSame('/register', $resolved['card_footer_link_url']);
+    public function testNoFooterWithoutSignupUrl(): void
+    {
+        $form = $this->formFactory->create(LoginType::class);
+        $view = $form->createView();
+
+        $this->assertNull($view->vars['card_footer_text']);
     }
 
     public function testBuildFormAddsEmailAndPasswordAndSubmit(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class);
+        $form = $this->formFactory->create(LoginType::class);
 
         $this->assertTrue($form->has('email'));
         $this->assertTrue($form->has('password'));
@@ -87,12 +78,7 @@ class LoginTypeTest extends TestCase
 
     public function testEmailFieldIsEmailType(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class);
+        $form = $this->formFactory->create(LoginType::class);
 
         $this->assertInstanceOf(
             EmailType::class,
@@ -102,12 +88,7 @@ class LoginTypeTest extends TestCase
 
     public function testPasswordFieldIsPasswordType(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class);
+        $form = $this->formFactory->create(LoginType::class);
 
         $this->assertInstanceOf(
             PasswordType::class,
@@ -117,24 +98,14 @@ class LoginTypeTest extends TestCase
 
     public function testRememberMeFieldNotAddedByDefault(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class);
+        $form = $this->formFactory->create(LoginType::class);
 
         $this->assertFalse($form->has('remember_me'));
     }
 
     public function testRememberMeFieldAddedWhenEnabled(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class, null, ['remember_me' => true]);
+        $form = $this->formFactory->create(LoginType::class, null, ['remember_me' => true]);
 
         $this->assertTrue($form->has('remember_me'));
         $this->assertInstanceOf(
@@ -145,12 +116,7 @@ class LoginTypeTest extends TestCase
 
     public function testSubmitFieldIsSubmitType(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class);
+        $form = $this->formFactory->create(LoginType::class);
 
         $this->assertInstanceOf(
             SubmitType::class,
@@ -160,12 +126,7 @@ class LoginTypeTest extends TestCase
 
     public function testEmailHasAutocompleteAttribute(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class);
+        $form = $this->formFactory->create(LoginType::class);
 
         $attr = $form->get('email')->getConfig()->getOption('attr');
         $this->assertSame('email', $attr['autocomplete']);
@@ -173,12 +134,7 @@ class LoginTypeTest extends TestCase
 
     public function testPasswordHasAutocompleteAttribute(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class);
+        $form = $this->formFactory->create(LoginType::class);
 
         $attr = $form->get('password')->getConfig()->getOption('attr');
         $this->assertSame('current-password', $attr['autocomplete']);
@@ -186,18 +142,12 @@ class LoginTypeTest extends TestCase
 
     public function testForgotPasswordUrlPassedToView(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new LoginType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(LoginType::class, null, [
+        $form = $this->formFactory->create(LoginType::class, null, [
             'forgot_password_url' => '/reset-password',
         ]);
 
         $view = $form->createView();
 
-        // The forgot_password_url should be available in the password field's view vars
         $this->assertSame('/reset-password', $view['password']->vars['label_link_url']);
         $this->assertNotEmpty($view['password']->vars['label_link_label']);
     }

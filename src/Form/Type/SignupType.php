@@ -50,8 +50,15 @@ class SignupType extends AbstractType
             'login_url' => null,
             'terms_url' => null,
         ]);
+    }
 
-        CardFormType::configureFooterLink($resolver, 'login_url', 'Already have an account?', 'Login');
+    public function buildView(FormView $view, FormInterface $form, array $options): void
+    {
+        if ($options['login_url']) {
+            $view->vars['card_footer_text'] = 'Already have an account?';
+            $view->vars['card_footer_link_label'] = 'Login';
+            $view->vars['card_footer_link_url'] = $options['login_url'];
+        }
     }
 
     public function finishView(FormView $view, FormInterface $form, array $options): void

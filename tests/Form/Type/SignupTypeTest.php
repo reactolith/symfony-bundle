@@ -10,15 +10,19 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Forms;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class SignupTypeTest extends TestCase
 {
     private SignupType $type;
+    private $formFactory;
 
     protected function setUp(): void
     {
         $this->type = new SignupType();
+        $this->formFactory = Forms::createFormFactoryBuilder()
+            ->addType(new CardFormType())
+            ->addType(new SignupType())
+            ->getFormFactory();
     }
 
     public function testGetBlockPrefix(): void
@@ -33,49 +37,30 @@ class SignupTypeTest extends TestCase
 
     public function testDefaultOptions(): void
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefined([
-            'card_title', 'card_description', 'card_footer_text',
-            'card_footer_link_label', 'card_footer_link_url',
-            'social_providers', 'login_url', 'terms_url',
-            'csrf_protection',
-        ]);
+        $form = $this->formFactory->create(SignupType::class);
+        $options = $form->getConfig()->getOptions();
 
-        $this->type->configureOptions($resolver);
-
-        $resolved = $resolver->resolve([]);
-        $this->assertSame('Create an account', $resolved['card_title']);
-        $this->assertSame('Enter your details below to create your account', $resolved['card_description']);
-        $this->assertNull($resolved['login_url']);
-        $this->assertNull($resolved['terms_url']);
+        $this->assertSame('Create an account', $options['card_title']);
+        $this->assertSame('Enter your details below to create your account', $options['card_description']);
+        $this->assertNull($options['login_url']);
+        $this->assertNull($options['terms_url']);
     }
 
-    public function testLoginUrlSetsCardFooter(): void
+    public function testLoginUrlSetsFooterInView(): void
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefined([
-            'card_title', 'card_description', 'card_footer_text',
-            'card_footer_link_label', 'card_footer_link_url',
-            'social_providers', 'login_url', 'terms_url',
-            'csrf_protection',
+        $form = $this->formFactory->create(SignupType::class, null, [
+            'login_url' => '/login',
         ]);
+        $view = $form->createView();
 
-        $this->type->configureOptions($resolver);
-
-        $resolved = $resolver->resolve(['login_url' => '/login']);
-        $this->assertSame('Already have an account?', $resolved['card_footer_text']);
-        $this->assertSame('Login', $resolved['card_footer_link_label']);
-        $this->assertSame('/login', $resolved['card_footer_link_url']);
+        $this->assertSame('Already have an account?', $view->vars['card_footer_text']);
+        $this->assertSame('Login', $view->vars['card_footer_link_label']);
+        $this->assertSame('/login', $view->vars['card_footer_link_url']);
     }
 
     public function testBuildFormAddsExpectedFields(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new SignupType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(SignupType::class);
+        $form = $this->formFactory->create(SignupType::class);
 
         $this->assertTrue($form->has('email'));
         $this->assertTrue($form->has('plainPassword'));
@@ -85,12 +70,7 @@ class SignupTypeTest extends TestCase
 
     public function testEmailFieldIsEmailType(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new SignupType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(SignupType::class);
+        $form = $this->formFactory->create(SignupType::class);
 
         $this->assertInstanceOf(
             EmailType::class,
@@ -100,12 +80,7 @@ class SignupTypeTest extends TestCase
 
     public function testPlainPasswordFieldIsRepeatedType(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new SignupType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(SignupType::class);
+        $form = $this->formFactory->create(SignupType::class);
 
         $this->assertInstanceOf(
             RepeatedType::class,
@@ -115,12 +90,7 @@ class SignupTypeTest extends TestCase
 
     public function testAgreeTermsIsCheckboxType(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new SignupType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(SignupType::class);
+        $form = $this->formFactory->create(SignupType::class);
 
         $this->assertInstanceOf(
             CheckboxType::class,
@@ -130,24 +100,14 @@ class SignupTypeTest extends TestCase
 
     public function testAgreeTermsIsNotMapped(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new SignupType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(SignupType::class);
+        $form = $this->formFactory->create(SignupType::class);
 
         $this->assertFalse($form->get('agreeTerms')->getConfig()->getMapped());
     }
 
     public function testEmailHasAutocompleteAttribute(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new SignupType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(SignupType::class);
+        $form = $this->formFactory->create(SignupType::class);
 
         $attr = $form->get('email')->getConfig()->getOption('attr');
         $this->assertSame('email', $attr['autocomplete']);
@@ -155,12 +115,7 @@ class SignupTypeTest extends TestCase
 
     public function testTermsUrlPassedToAgreeTermsView(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new SignupType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(SignupType::class, null, [
+        $form = $this->formFactory->create(SignupType::class, null, [
             'terms_url' => '/terms',
         ]);
 

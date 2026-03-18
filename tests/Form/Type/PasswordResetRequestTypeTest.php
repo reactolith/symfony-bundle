@@ -6,17 +6,20 @@ use PHPUnit\Framework\TestCase;
 use Reactolith\SymfonyBundle\Form\Type\CardFormType;
 use Reactolith\SymfonyBundle\Form\Type\PasswordResetRequestType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Forms;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class PasswordResetRequestTypeTest extends TestCase
 {
     private PasswordResetRequestType $type;
+    private $formFactory;
 
     protected function setUp(): void
     {
         $this->type = new PasswordResetRequestType();
+        $this->formFactory = Forms::createFormFactoryBuilder()
+            ->addType(new CardFormType())
+            ->addType(new PasswordResetRequestType())
+            ->getFormFactory();
     }
 
     public function testGetBlockPrefix(): void
@@ -31,45 +34,28 @@ class PasswordResetRequestTypeTest extends TestCase
 
     public function testDefaultOptions(): void
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefined([
-            'card_title', 'card_description', 'card_footer_text',
-            'card_footer_link_label', 'card_footer_link_url',
-            'social_providers', 'login_url', 'csrf_protection',
-        ]);
+        $form = $this->formFactory->create(PasswordResetRequestType::class);
+        $options = $form->getConfig()->getOptions();
 
-        $this->type->configureOptions($resolver);
-
-        $resolved = $resolver->resolve([]);
-        $this->assertSame('Reset password', $resolved['card_title']);
-        $this->assertSame('Enter your email address and we will send you a reset link', $resolved['card_description']);
+        $this->assertSame('Reset password', $options['card_title']);
+        $this->assertSame('Enter your email address and we will send you a reset link', $options['card_description']);
     }
 
-    public function testLoginUrlSetsCardFooter(): void
+    public function testLoginUrlSetsFooterInView(): void
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefined([
-            'card_title', 'card_description', 'card_footer_text',
-            'card_footer_link_label', 'card_footer_link_url',
-            'social_providers', 'login_url', 'csrf_protection',
+        $form = $this->formFactory->create(PasswordResetRequestType::class, null, [
+            'login_url' => '/login',
         ]);
+        $view = $form->createView();
 
-        $this->type->configureOptions($resolver);
-
-        $resolved = $resolver->resolve(['login_url' => '/login']);
-        $this->assertSame('Remember your password?', $resolved['card_footer_text']);
-        $this->assertSame('Back to login', $resolved['card_footer_link_label']);
-        $this->assertSame('/login', $resolved['card_footer_link_url']);
+        $this->assertSame('Remember your password?', $view->vars['card_footer_text']);
+        $this->assertSame('Back to login', $view->vars['card_footer_link_label']);
+        $this->assertSame('/login', $view->vars['card_footer_link_url']);
     }
 
     public function testBuildFormAddsEmailAndSubmit(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new PasswordResetRequestType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(PasswordResetRequestType::class);
+        $form = $this->formFactory->create(PasswordResetRequestType::class);
 
         $this->assertTrue($form->has('email'));
         $this->assertTrue($form->has('submit'));
@@ -78,12 +64,7 @@ class PasswordResetRequestTypeTest extends TestCase
 
     public function testEmailFieldIsEmailType(): void
     {
-        $formFactory = Forms::createFormFactoryBuilder()
-            ->addType(new CardFormType())
-            ->addType(new PasswordResetRequestType())
-            ->getFormFactory();
-
-        $form = $formFactory->create(PasswordResetRequestType::class);
+        $form = $this->formFactory->create(PasswordResetRequestType::class);
 
         $this->assertInstanceOf(
             EmailType::class,
