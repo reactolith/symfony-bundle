@@ -180,14 +180,15 @@
 
 {%- block reactolith_card_start -%}
 {%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+{%- set _tdomain = translation_domain|default('reactolith') -%}
 <{{ _prefix }}card class="w-full max-w-sm">
 {%- if card_title is defined and card_title or card_description is defined and card_description %}
   <{{ _prefix }}card-header>
     {%- if card_title is defined and card_title %}
-    <{{ _prefix }}card-title>{{ card_title }}</{{ _prefix }}card-title>
+    <{{ _prefix }}card-title>{{ _tdomain is same as(false) ? card_title : card_title|trans({}, _tdomain) }}</{{ _prefix }}card-title>
     {%- endif %}
     {%- if card_description is defined and card_description %}
-    <{{ _prefix }}card-description>{{ card_description }}</{{ _prefix }}card-description>
+    <{{ _prefix }}card-description>{{ _tdomain is same as(false) ? card_description : card_description|trans({}, _tdomain) }}</{{ _prefix }}card-description>
     {%- endif %}
   </{{ _prefix }}card-header>
 {%- endif %}
@@ -207,6 +208,7 @@
 
 {%- block reactolith_card_end -%}
 {%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+{%- set _tdomain = translation_domain|default('reactolith') -%}
     {{ block('form_end') }}
     {%- if social_providers is defined and social_providers|length > 0 %}
     <div class="relative my-4">
@@ -214,7 +216,7 @@
         <{{ _prefix }}separator></{{ _prefix }}separator>
       </div>
       <div class="relative flex justify-center text-xs uppercase">
-        <span class="bg-background px-2 text-muted-foreground">{{ 'Or continue with'|trans({}, 'reactolith') }}</span>
+        <span class="bg-background px-2 text-muted-foreground">{{ 'Or continue with'|trans({}, _tdomain) }}</span>
       </div>
     </div>
     <div class="grid gap-4{% if social_providers|length > 1 %} grid-cols-2{% endif %}">
@@ -229,9 +231,9 @@
   {%- if card_footer_text is defined and card_footer_text %}
   <{{ _prefix }}card-footer>
     <p class="text-center text-sm text-muted-foreground w-full">
-      {{ card_footer_text }}
+      {{ _tdomain is same as(false) ? card_footer_text : card_footer_text|trans({}, _tdomain) }}
       {%- if card_footer_link_url is defined and card_footer_link_url and card_footer_link_label is defined and card_footer_link_label %}
-      <a href="{{ card_footer_link_url }}" class="underline underline-offset-4 hover:text-primary">{{ card_footer_link_label }}</a>
+      <a href="{{ card_footer_link_url }}" class="underline underline-offset-4 hover:text-primary">{{ _tdomain is same as(false) ? card_footer_link_label : card_footer_link_label|trans({}, _tdomain) }}</a>
       {%- endif %}
     </p>
   </{{ _prefix }}card-footer>

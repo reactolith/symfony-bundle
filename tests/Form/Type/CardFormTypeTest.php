@@ -32,7 +32,7 @@ class CardFormTypeTest extends TestCase
         $resolver->setDefined([
             'card_title', 'card_description',
             'card_footer_text', 'card_footer_link_label', 'card_footer_link_url',
-            'social_providers',
+            'social_providers', 'translation_domain',
         ]);
 
         $this->type->configureOptions($resolver);
@@ -44,6 +44,37 @@ class CardFormTypeTest extends TestCase
         $this->assertNull($resolved['card_footer_link_label']);
         $this->assertNull($resolved['card_footer_link_url']);
         $this->assertSame([], $resolved['social_providers']);
+        $this->assertSame('reactolith', $resolved['translation_domain']);
+    }
+
+    public function testTranslationDomainCanBeOverridden(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefined([
+            'card_title', 'card_description', 'card_footer_text',
+            'card_footer_link_label', 'card_footer_link_url',
+            'social_providers', 'translation_domain',
+        ]);
+
+        $this->type->configureOptions($resolver);
+
+        $resolved = $resolver->resolve(['translation_domain' => 'my_app']);
+        $this->assertSame('my_app', $resolved['translation_domain']);
+    }
+
+    public function testTranslationCanBeDisabled(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefined([
+            'card_title', 'card_description', 'card_footer_text',
+            'card_footer_link_label', 'card_footer_link_url',
+            'social_providers', 'translation_domain',
+        ]);
+
+        $this->type->configureOptions($resolver);
+
+        $resolved = $resolver->resolve(['translation_domain' => false]);
+        $this->assertFalse($resolved['translation_domain']);
     }
 
     public function testCardTitleCanBeCustomized(): void
