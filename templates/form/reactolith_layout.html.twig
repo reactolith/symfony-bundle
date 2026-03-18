@@ -1,6 +1,8 @@
 {# Extends the base div layout for fallback on blocks we don't override #}
 {% use "form_div_layout.html.twig" %}
 
+{# ── Standard field rendering ──────────────────────────────────────────── #}
+
 {% block form_row -%}
 <div class="space-y-2">
   {{ form_label(form) }}
@@ -13,12 +15,22 @@
 {%- block form_label -%}
 {%- if label is not same as(false) -%}
 {%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+{%- set _label_html -%}
 <{{ _prefix }}label
 {%- if id is defined %} for="{{ id }}"{% endif -%}
 {%- if label_attr is defined %}{% for key, val in label_attr %} {{ key }}="{{ val }}"{% endfor %}{% endif -%}
 >
   {{- label is not same as(null) ? (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) : name|humanize -}}
 </{{ _prefix }}label>
+{%- endset -%}
+{%- if label_link_url is defined and label_link_url -%}
+<div class="flex items-center">
+{{ _label_html }}
+<a href="{{ label_link_url }}" class="ml-auto inline-block text-sm underline-offset-4 hover:underline">{{ label_link_label|default('') }}</a>
+</div>
+{%- else -%}
+{{ _label_html }}
+{%- endif -%}
 {%- endif -%}
 {%- endblock %}
 
@@ -163,3 +175,99 @@
   {%- for key, val in attr %} {{ key }}="{{ val }}"{% endfor -%}
 ></{{ _prefix }}switch>
 {%- endblock %}
+
+{# ── CardFormType blocks ───────────────────────────────────────────────── #}
+
+{%- block reactolith_card_start -%}
+{%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+{%- set _tdomain = translation_domain|default('reactolith') -%}
+<{{ _prefix }}card class="w-full max-w-sm">
+{%- if card_title is defined and card_title or card_description is defined and card_description %}
+  <{{ _prefix }}card-header>
+    {%- if card_title is defined and card_title %}
+    <{{ _prefix }}card-title>{{ _tdomain is same as(false) ? card_title : card_title|trans({}, _tdomain) }}</{{ _prefix }}card-title>
+    {%- endif %}
+    {%- if card_description is defined and card_description %}
+    <{{ _prefix }}card-description>{{ _tdomain is same as(false) ? card_description : card_description|trans({}, _tdomain) }}</{{ _prefix }}card-description>
+    {%- endif %}
+  </{{ _prefix }}card-header>
+{%- endif %}
+  <{{ _prefix }}card-content>
+    {{ block('form_start') }}
+{%- endblock -%}
+
+{%- block reactolith_card_widget -%}
+    <div class="flex flex-col gap-6">
+      {%- if form is rootform -%}
+          {{ form_errors(form) }}
+      {%- endif -%}
+      {{- block('form_rows') -}}
+      {{- form_rest(form) -}}
+    </div>
+{%- endblock -%}
+
+{%- block reactolith_card_end -%}
+{%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+{%- set _tdomain = translation_domain|default('reactolith') -%}
+    {{ block('form_end') }}
+    {%- if social_providers is defined and social_providers|length > 0 %}
+    <div class="relative my-4">
+      <div class="absolute inset-0 flex items-center">
+        <{{ _prefix }}separator></{{ _prefix }}separator>
+      </div>
+      <div class="relative flex justify-center text-xs uppercase">
+        <span class="bg-background px-2 text-muted-foreground">{{ 'Or continue with'|trans({}, _tdomain) }}</span>
+      </div>
+    </div>
+    <div class="grid gap-4{% if social_providers|length > 1 %} grid-cols-2{% endif %}">
+      {%- for provider in social_providers %}
+      <a href="{{ provider.url }}">
+        <{{ _prefix }}button variant="outline" class="w-full" type="button">{{ provider.name }}</{{ _prefix }}button>
+      </a>
+      {%- endfor %}
+    </div>
+    {%- endif %}
+  </{{ _prefix }}card-content>
+  {%- if card_footer_text is defined and card_footer_text %}
+  <{{ _prefix }}card-footer>
+    <p class="text-center text-sm text-muted-foreground w-full">
+      {{ _tdomain is same as(false) ? card_footer_text : card_footer_text|trans({}, _tdomain) }}
+      {%- if card_footer_link_url is defined and card_footer_link_url and card_footer_link_label is defined and card_footer_link_label %}
+      <a href="{{ card_footer_link_url }}" class="underline underline-offset-4 hover:text-primary">{{ _tdomain is same as(false) ? card_footer_link_label : card_footer_link_label|trans({}, _tdomain) }}</a>
+      {%- endif %}
+    </p>
+  </{{ _prefix }}card-footer>
+  {%- endif %}
+</{{ _prefix }}card>
+{%- endblock -%}
+
+{# ── FieldGroupType blocks ─────────────────────────────────────────────── #}
+
+{%- block reactolith_field_group_row -%}
+{{ form_widget(form) }}
+{%- endblock -%}
+
+{%- block reactolith_field_group_widget -%}
+<div class="flex {{ row is defined and row ? 'flex-row' : 'flex-col' }} gap-{{ gap|default('4') }}">
+  {{- block('form_rows') -}}
+  {{- form_rest(form) -}}
+</div>
+{%- endblock -%}
+
+{# ── SeparatorType blocks ──────────────────────────────────────────────── #}
+
+{%- block reactolith_separator_row -%}
+{%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+{%- if label is not same as(false) and label -%}
+<div class="relative">
+  <div class="absolute inset-0 flex items-center">
+    <{{ _prefix }}separator></{{ _prefix }}separator>
+  </div>
+  <div class="relative flex justify-center text-xs uppercase">
+    <span class="bg-background px-2 text-muted-foreground">{{ translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain) }}</span>
+  </div>
+</div>
+{%- else -%}
+<{{ _prefix }}separator></{{ _prefix }}separator>
+{%- endif -%}
+{%- endblock -%}
