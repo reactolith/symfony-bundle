@@ -11,7 +11,6 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class SignupType extends AbstractType
@@ -52,17 +51,7 @@ class SignupType extends AbstractType
             'terms_url' => null,
         ]);
 
-        $resolver->setDefault('card_footer_text', function (Options $options) {
-            return $options['login_url'] ? 'Already have an account?' : null;
-        });
-
-        $resolver->setDefault('card_footer_link_label', function (Options $options) {
-            return $options['login_url'] ? 'Login' : null;
-        });
-
-        $resolver->setDefault('card_footer_link_url', function (Options $options) {
-            return $options['login_url'];
-        });
+        CardFormType::configureFooterLink($resolver, 'login_url', 'Already have an account?', 'Login');
     }
 
     public function finishView(FormView $view, FormInterface $form, array $options): void

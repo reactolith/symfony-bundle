@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Reactolith\SymfonyBundle\Form\Type\FieldGroupType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Forms;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class FieldGroupTypeTest extends TestCase
@@ -58,6 +59,18 @@ class FieldGroupTypeTest extends TestCase
 
         $resolved = $resolver->resolve(['gap' => '2']);
         $this->assertSame('2', $resolved['gap']);
+    }
+
+    public function testGapOptionRejectsInvalidValues(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefined(['inherit_data', 'row', 'gap']);
+        $resolver->setDefaults(['inherit_data' => false, 'row' => false, 'gap' => '6']);
+
+        $this->type->configureOptions($resolver);
+
+        $this->expectException(InvalidOptionsException::class);
+        $resolver->resolve(['gap' => '99']);
     }
 
     public function testFieldGroupCanContainChildren(): void

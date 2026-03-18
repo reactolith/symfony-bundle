@@ -16,6 +16,8 @@ class FieldGroupType extends AbstractType
             'row' => false,
             'gap' => '4',
         ]);
+
+        $resolver->setAllowedValues('gap', ['0', '1', '2', '3', '4', '5', '6', '8', '10', '12']);
     }
 
     public function buildView(FormView $view, FormInterface $form, array $options): void

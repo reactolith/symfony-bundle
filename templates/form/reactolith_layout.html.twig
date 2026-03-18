@@ -15,23 +15,21 @@
 {%- block form_label -%}
 {%- if label is not same as(false) -%}
 {%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
-{%- if label_link_url is defined and label_link_url -%}
-<div class="flex items-center">
+{%- set _label_html -%}
 <{{ _prefix }}label
 {%- if id is defined %} for="{{ id }}"{% endif -%}
 {%- if label_attr is defined %}{% for key, val in label_attr %} {{ key }}="{{ val }}"{% endfor %}{% endif -%}
 >
   {{- label is not same as(null) ? (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) : name|humanize -}}
 </{{ _prefix }}label>
+{%- endset -%}
+{%- if label_link_url is defined and label_link_url -%}
+<div class="flex items-center">
+{{ _label_html }}
 <a href="{{ label_link_url }}" class="ml-auto inline-block text-sm underline-offset-4 hover:underline">{{ label_link_label|default('') }}</a>
 </div>
 {%- else -%}
-<{{ _prefix }}label
-{%- if id is defined %} for="{{ id }}"{% endif -%}
-{%- if label_attr is defined %}{% for key, val in label_attr %} {{ key }}="{{ val }}"{% endfor %}{% endif -%}
->
-  {{- label is not same as(null) ? (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) : name|humanize -}}
-</{{ _prefix }}label>
+{{ _label_html }}
 {%- endif -%}
 {%- endif -%}
 {%- endblock %}
@@ -216,7 +214,7 @@
         <{{ _prefix }}separator></{{ _prefix }}separator>
       </div>
       <div class="relative flex justify-center text-xs uppercase">
-        <span class="bg-background px-2 text-muted-foreground">Or continue with</span>
+        <span class="bg-background px-2 text-muted-foreground">{{ 'Or continue with'|trans({}, 'reactolith') }}</span>
       </div>
     </div>
     <div class="grid gap-4{% if social_providers|length > 1 %} grid-cols-2{% endif %}">

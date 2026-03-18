@@ -5,7 +5,6 @@ namespace Reactolith\SymfonyBundle\Form\Type;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class AccountActivationType extends AbstractType
@@ -25,17 +24,7 @@ class AccountActivationType extends AbstractType
             'login_url' => null,
         ]);
 
-        $resolver->setDefault('card_footer_text', function (Options $options) {
-            return $options['login_url'] ? 'Already activated?' : null;
-        });
-
-        $resolver->setDefault('card_footer_link_label', function (Options $options) {
-            return $options['login_url'] ? 'Login' : null;
-        });
-
-        $resolver->setDefault('card_footer_link_url', function (Options $options) {
-            return $options['login_url'];
-        });
+        CardFormType::configureFooterLink($resolver, 'login_url', 'Already activated?', 'Login');
     }
 
     public function getParent(): string

@@ -20,31 +20,18 @@ return function (ContainerConfigurator $container): void {
         ->tag('twig.extension');
 
     if (class_exists(\Symfony\Component\Form\AbstractType::class)) {
-        $services->set(SwitchType::class)
-            ->tag('form.type');
-
-        $services->set(CardFormType::class)
-            ->tag('form.type');
-
-        $services->set(FieldGroupType::class)
-            ->tag('form.type');
-
-        $services->set(SeparatorType::class)
-            ->tag('form.type');
-
-        $services->set(LoginType::class)
-            ->tag('form.type');
-
-        $services->set(SignupType::class)
-            ->tag('form.type');
-
-        $services->set(PasswordResetRequestType::class)
-            ->tag('form.type');
-
-        $services->set(PasswordResetConfirmType::class)
-            ->tag('form.type');
-
-        $services->set(AccountActivationType::class)
-            ->tag('form.type');
+        foreach ([
+            SwitchType::class,
+            CardFormType::class,
+            FieldGroupType::class,
+            SeparatorType::class,
+            LoginType::class,
+            SignupType::class,
+            PasswordResetRequestType::class,
+            PasswordResetConfirmType::class,
+            AccountActivationType::class,
+        ] as $type) {
+            $services->set($type)->tag('form.type');
+        }
     }
 };

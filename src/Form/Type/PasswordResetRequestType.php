@@ -6,7 +6,6 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class PasswordResetRequestType extends AbstractType
@@ -34,17 +33,7 @@ class PasswordResetRequestType extends AbstractType
             'login_url' => null,
         ]);
 
-        $resolver->setDefault('card_footer_text', function (Options $options) {
-            return $options['login_url'] ? 'Remember your password?' : null;
-        });
-
-        $resolver->setDefault('card_footer_link_label', function (Options $options) {
-            return $options['login_url'] ? 'Back to login' : null;
-        });
-
-        $resolver->setDefault('card_footer_link_url', function (Options $options) {
-            return $options['login_url'];
-        });
+        CardFormType::configureFooterLink($resolver, 'login_url', 'Remember your password?', 'Back to login');
     }
 
     public function getParent(): string

@@ -10,7 +10,6 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class LoginType extends AbstractType
@@ -55,17 +54,7 @@ class LoginType extends AbstractType
             'remember_me' => false,
         ]);
 
-        $resolver->setDefault('card_footer_text', function (Options $options) {
-            return $options['signup_url'] ? "Don't have an account?" : null;
-        });
-
-        $resolver->setDefault('card_footer_link_label', function (Options $options) {
-            return $options['signup_url'] ? 'Sign up' : null;
-        });
-
-        $resolver->setDefault('card_footer_link_url', function (Options $options) {
-            return $options['signup_url'];
-        });
+        CardFormType::configureFooterLink($resolver, 'signup_url', "Don't have an account?", 'Sign up');
     }
 
     public function finishView(FormView $view, FormInterface $form, array $options): void
