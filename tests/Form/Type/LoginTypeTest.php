@@ -124,6 +124,29 @@ class LoginTypeTest extends TestCase
         );
     }
 
+    public function testLabelsCanBeOverridden(): void
+    {
+        $form = $this->formFactory->create(LoginType::class, null, [
+            'label_email' => 'E-Mail-Adresse',
+            'label_password' => 'Passwort',
+            'label_submit' => 'Anmelden',
+        ]);
+
+        $this->assertSame('E-Mail-Adresse', $form->get('email')->getConfig()->getOption('label'));
+        $this->assertSame('Passwort', $form->get('password')->getConfig()->getOption('label'));
+        $this->assertSame('Anmelden', $form->get('submit')->getConfig()->getOption('label'));
+    }
+
+    public function testPlaceholderCanBeOverridden(): void
+    {
+        $form = $this->formFactory->create(LoginType::class, null, [
+            'placeholder_email' => 'user@firma.de',
+        ]);
+
+        $attr = $form->get('email')->getConfig()->getOption('attr');
+        $this->assertSame('user@firma.de', $attr['placeholder']);
+    }
+
     public function testEmailHasAutocompleteAttribute(): void
     {
         $form = $this->formFactory->create(LoginType::class);

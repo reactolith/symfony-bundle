@@ -105,6 +105,21 @@ class SignupTypeTest extends TestCase
         $this->assertFalse($form->get('agreeTerms')->getConfig()->getMapped());
     }
 
+    public function testLabelsCanBeOverridden(): void
+    {
+        $form = $this->formFactory->create(SignupType::class, null, [
+            'label_email' => 'E-Mail',
+            'label_password' => 'Passwort',
+            'label_password_confirm' => 'Passwort bestätigen',
+            'label_agree_terms' => 'AGB akzeptieren',
+            'label_submit' => 'Registrieren',
+        ]);
+
+        $this->assertSame('E-Mail', $form->get('email')->getConfig()->getOption('label'));
+        $this->assertSame('Registrieren', $form->get('submit')->getConfig()->getOption('label'));
+        $this->assertSame('AGB akzeptieren', $form->get('agreeTerms')->getConfig()->getOption('label'));
+    }
+
     public function testEmailHasAutocompleteAttribute(): void
     {
         $form = $this->formFactory->create(SignupType::class);

@@ -16,14 +16,14 @@ class PasswordResetConfirmType extends AbstractType
         $builder
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
-                'first_options' => ['label' => 'New password'],
-                'second_options' => ['label' => 'Confirm new password'],
+                'first_options' => ['label' => $options['label_password']],
+                'second_options' => ['label' => $options['label_password_confirm']],
                 'options' => [
                     'attr' => ['autocomplete' => 'new-password'],
                 ],
             ])
             ->add('submit', SubmitType::class, [
-                'label' => 'Reset password',
+                'label' => $options['label_submit'],
             ]);
     }
 
@@ -32,6 +32,9 @@ class PasswordResetConfirmType extends AbstractType
         $resolver->setDefaults([
             'card_title' => 'Set new password',
             'card_description' => 'Enter your new password below',
+            'label_password' => 'New password',
+            'label_password_confirm' => 'Confirm new password',
+            'label_submit' => 'Reset password',
         ]);
     }
 

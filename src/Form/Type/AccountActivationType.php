@@ -14,7 +14,7 @@ class AccountActivationType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('submit', SubmitType::class, [
-            'label' => 'Activate account',
+            'label' => $options['label_submit'],
         ]);
     }
 
@@ -23,6 +23,9 @@ class AccountActivationType extends AbstractType
         $resolver->setDefaults([
             'card_title' => 'Activate your account',
             'card_description' => 'Click the button below to activate your account',
+            'card_footer_text' => 'Already activated?',
+            'card_footer_link_label' => 'Login',
+            'label_submit' => 'Activate account',
             'login_url' => null,
         ]);
     }
@@ -30,9 +33,11 @@ class AccountActivationType extends AbstractType
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         if ($options['login_url']) {
-            $view->vars['card_footer_text'] = 'Already activated?';
-            $view->vars['card_footer_link_label'] = 'Login';
+            $view->vars['card_footer_text'] = $options['card_footer_text'];
+            $view->vars['card_footer_link_label'] = $options['card_footer_link_label'];
             $view->vars['card_footer_link_url'] = $options['login_url'];
+        } else {
+            $view->vars['card_footer_text'] = null;
         }
     }
 

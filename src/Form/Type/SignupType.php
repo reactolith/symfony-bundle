@@ -19,26 +19,26 @@ class SignupType extends AbstractType
     {
         $builder
             ->add('email', EmailType::class, [
-                'label' => 'Email',
+                'label' => $options['label_email'],
                 'attr' => [
-                    'placeholder' => 'm@example.com',
+                    'placeholder' => $options['placeholder_email'],
                     'autocomplete' => 'email',
                 ],
             ])
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
-                'first_options' => ['label' => 'Password'],
-                'second_options' => ['label' => 'Confirm password'],
+                'first_options' => ['label' => $options['label_password']],
+                'second_options' => ['label' => $options['label_password_confirm']],
                 'options' => [
                     'attr' => ['autocomplete' => 'new-password'],
                 ],
             ])
             ->add('agreeTerms', CheckboxType::class, [
-                'label' => 'I agree to the terms and conditions',
+                'label' => $options['label_agree_terms'],
                 'mapped' => false,
             ])
             ->add('submit', SubmitType::class, [
-                'label' => 'Create account',
+                'label' => $options['label_submit'],
             ]);
     }
 
@@ -47,6 +47,14 @@ class SignupType extends AbstractType
         $resolver->setDefaults([
             'card_title' => 'Create an account',
             'card_description' => 'Enter your details below to create your account',
+            'card_footer_text' => 'Already have an account?',
+            'card_footer_link_label' => 'Login',
+            'label_email' => 'Email',
+            'label_password' => 'Password',
+            'label_password_confirm' => 'Confirm password',
+            'label_agree_terms' => 'I agree to the terms and conditions',
+            'label_submit' => 'Create account',
+            'placeholder_email' => 'm@example.com',
             'login_url' => null,
             'terms_url' => null,
         ]);
@@ -55,9 +63,11 @@ class SignupType extends AbstractType
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         if ($options['login_url']) {
-            $view->vars['card_footer_text'] = 'Already have an account?';
-            $view->vars['card_footer_link_label'] = 'Login';
+            $view->vars['card_footer_text'] = $options['card_footer_text'];
+            $view->vars['card_footer_link_label'] = $options['card_footer_link_label'];
             $view->vars['card_footer_link_url'] = $options['login_url'];
+        } else {
+            $view->vars['card_footer_text'] = null;
         }
     }
 

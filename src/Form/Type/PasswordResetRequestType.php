@@ -16,14 +16,14 @@ class PasswordResetRequestType extends AbstractType
     {
         $builder
             ->add('email', EmailType::class, [
-                'label' => 'Email',
+                'label' => $options['label_email'],
                 'attr' => [
-                    'placeholder' => 'm@example.com',
+                    'placeholder' => $options['placeholder_email'],
                     'autocomplete' => 'email',
                 ],
             ])
             ->add('submit', SubmitType::class, [
-                'label' => 'Send reset link',
+                'label' => $options['label_submit'],
             ]);
     }
 
@@ -32,6 +32,11 @@ class PasswordResetRequestType extends AbstractType
         $resolver->setDefaults([
             'card_title' => 'Reset password',
             'card_description' => 'Enter your email address and we will send you a reset link',
+            'card_footer_text' => 'Remember your password?',
+            'card_footer_link_label' => 'Back to login',
+            'label_email' => 'Email',
+            'label_submit' => 'Send reset link',
+            'placeholder_email' => 'm@example.com',
             'login_url' => null,
         ]);
     }
@@ -39,9 +44,11 @@ class PasswordResetRequestType extends AbstractType
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         if ($options['login_url']) {
-            $view->vars['card_footer_text'] = 'Remember your password?';
-            $view->vars['card_footer_link_label'] = 'Back to login';
+            $view->vars['card_footer_text'] = $options['card_footer_text'];
+            $view->vars['card_footer_link_label'] = $options['card_footer_link_label'];
             $view->vars['card_footer_link_url'] = $options['login_url'];
+        } else {
+            $view->vars['card_footer_text'] = null;
         }
     }
 

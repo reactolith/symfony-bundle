@@ -18,14 +18,14 @@ class LoginType extends AbstractType
     {
         $builder
             ->add('email', EmailType::class, [
-                'label' => 'Email',
+                'label' => $options['label_email'],
                 'attr' => [
-                    'placeholder' => 'm@example.com',
+                    'placeholder' => $options['placeholder_email'],
                     'autocomplete' => 'email',
                 ],
             ])
             ->add('password', PasswordType::class, [
-                'label' => 'Password',
+                'label' => $options['label_password'],
                 'attr' => [
                     'autocomplete' => 'current-password',
                 ],
@@ -33,14 +33,14 @@ class LoginType extends AbstractType
 
         if ($options['remember_me']) {
             $builder->add('remember_me', CheckboxType::class, [
-                'label' => 'Remember me',
+                'label' => $options['label_remember_me'],
                 'required' => false,
                 'mapped' => false,
             ]);
         }
 
         $builder->add('submit', SubmitType::class, [
-            'label' => 'Login',
+            'label' => $options['label_submit'],
         ]);
     }
 
@@ -49,6 +49,14 @@ class LoginType extends AbstractType
         $resolver->setDefaults([
             'card_title' => 'Login',
             'card_description' => 'Enter your email below to login to your account',
+            'card_footer_text' => "Don't have an account?",
+            'card_footer_link_label' => 'Sign up',
+            'label_email' => 'Email',
+            'label_password' => 'Password',
+            'label_submit' => 'Login',
+            'label_remember_me' => 'Remember me',
+            'label_forgot_password' => 'Forgot your password?',
+            'placeholder_email' => 'm@example.com',
             'forgot_password_url' => null,
             'signup_url' => null,
             'remember_me' => false,
@@ -58,9 +66,11 @@ class LoginType extends AbstractType
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         if ($options['signup_url']) {
-            $view->vars['card_footer_text'] = "Don't have an account?";
-            $view->vars['card_footer_link_label'] = 'Sign up';
+            $view->vars['card_footer_text'] = $options['card_footer_text'];
+            $view->vars['card_footer_link_label'] = $options['card_footer_link_label'];
             $view->vars['card_footer_link_url'] = $options['signup_url'];
+        } else {
+            $view->vars['card_footer_text'] = null;
         }
     }
 
@@ -68,7 +78,7 @@ class LoginType extends AbstractType
     {
         if ($options['forgot_password_url'] && isset($view['password'])) {
             $view['password']->vars['label_link_url'] = $options['forgot_password_url'];
-            $view['password']->vars['label_link_label'] = 'Forgot your password?';
+            $view['password']->vars['label_link_label'] = $options['label_forgot_password'];
         }
     }
 
