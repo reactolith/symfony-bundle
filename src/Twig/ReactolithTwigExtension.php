@@ -8,10 +8,34 @@ use Twig\TwigFunction;
 
 class ReactolithTwigExtension extends AbstractExtension
 {
+    /**
+     * Maps lowercase HTML attribute names to their React/camelCase equivalents
+     * needed when rendering inside React-based web components.
+     */
+    private const CAMEL_CASE_ATTRS = [
+        'autocomplete' => 'autoComplete',
+        'autofocus'    => 'autoFocus',
+        'tabindex'     => 'tabIndex',
+        'maxlength'    => 'maxLength',
+        'minlength'    => 'minLength',
+        'readonly'     => 'readOnly',
+        'novalidate'   => 'noValidate',
+        'formaction'   => 'formAction',
+        'formenctype'  => 'formEncType',
+        'formmethod'   => 'formMethod',
+        'formnovalidate' => 'formNoValidate',
+        'formtarget'   => 'formTarget',
+        'accesskey'    => 'accessKey',
+        'contenteditable' => 'contentEditable',
+        'crossorigin'  => 'crossOrigin',
+        'enterkeyhint' => 'enterKeyHint',
+    ];
+
     public function getFilters(): array
     {
         return [
             new TwigFilter('re_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
+            new TwigFilter('re_attr_key', $this->mapAttributeName(...)),
         ];
     }
 
@@ -20,6 +44,11 @@ class ReactolithTwigExtension extends AbstractExtension
         return [
             new TwigFunction('re_attrs', $this->renderAttributes(...), ['is_safe' => ['html']]),
         ];
+    }
+
+    public function mapAttributeName(string $name): string
+    {
+        return self::CAMEL_CASE_ATTRS[strtolower($name)] ?? $name;
     }
 
     /**
@@ -39,8 +68,10 @@ class ReactolithTwigExtension extends AbstractExtension
                 continue;
             }
 
+            $mappedName = self::CAMEL_CASE_ATTRS[strtolower($name)] ?? $name;
+
             if ($value === true) {
-                $parts[] = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+                $parts[] = htmlspecialchars($mappedName, ENT_QUOTES, 'UTF-8');
                 continue;
             }
 
@@ -48,7 +79,7 @@ class ReactolithTwigExtension extends AbstractExtension
                 $jsonValue = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                 $parts[] = sprintf(
                     "json-%s='%s'",
-                    htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
+                    htmlspecialchars($mappedName, ENT_QUOTES, 'UTF-8'),
                     str_replace("'", '&#039;', $jsonValue),
                 );
                 continue;
@@ -56,7 +87,7 @@ class ReactolithTwigExtension extends AbstractExtension
 
             $parts[] = sprintf(
                 '%s="%s"',
-                htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
+                htmlspecialchars($mappedName, ENT_QUOTES, 'UTF-8'),
                 htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'),
             );
         }
