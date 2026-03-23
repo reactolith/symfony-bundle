@@ -270,9 +270,10 @@ class FormThemeTest extends TestCase
 
         $html = $this->renderLabel($form->get('name'));
 
-        $this->assertStringContainsString('<ui-label', $html);
+        $this->assertStringContainsString('<ui-field-label', $html);
+        $this->assertStringContainsString('html-for=', $html);
         $this->assertStringContainsString('Your Name', $html);
-        $this->assertStringContainsString('</ui-label>', $html);
+        $this->assertStringContainsString('</ui-field-label>', $html);
     }
 
     public function testErrorsRenderWithCorrectCssClass(): void
@@ -301,7 +302,8 @@ class FormThemeTest extends TestCase
 
         $html = $this->renderHelp($form->get('email'));
 
-        $this->assertStringContainsString('text-sm text-muted-foreground', $html);
+        $this->assertStringContainsString('<ui-field-description>', $html);
+        $this->assertStringContainsString('</ui-field-description>', $html);
         $this->assertStringContainsString('Enter your primary email address', $html);
     }
 

@@ -4,24 +4,27 @@
 {# ── Standard field rendering ──────────────────────────────────────────── #}
 
 {% block form_row -%}
-<div class="space-y-2">
+{%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+<{{ _prefix }}field>
   {{ form_label(form) }}
-  {{ form_widget(form) }}
+  <{{ _prefix }}field-content>
+    {{ form_widget(form) }}
+  </{{ _prefix }}field-content>
   {{ form_help(form) }}
   {{ form_errors(form) }}
-</div>
+</{{ _prefix }}field>
 {%- endblock %}
 
 {%- block form_label -%}
 {%- if label is not same as(false) -%}
 {%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
 {%- set _label_html -%}
-<{{ _prefix }}label
-{%- if id is defined %} for="{{ id }}"{% endif -%}
+<{{ _prefix }}field-label
+{%- if id is defined %} html-for="{{ id }}"{% endif -%}
 {%- if label_attr is defined %}{% for key, val in label_attr %} {{ key }}="{{ val }}"{% endfor %}{% endif -%}
 >
   {{- label is not same as(null) ? (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) : name|humanize -}}
-</{{ _prefix }}label>
+</{{ _prefix }}field-label>
 {%- endset -%}
 {%- if label_link_url is defined and label_link_url -%}
 <div class="flex items-center">
@@ -162,7 +165,8 @@
 
 {%- block form_help -%}
 {%- if help is not empty %}
-  <p class="text-sm text-muted-foreground">{{ translation_domain is same as(false) ? help : help|trans(help_translation_parameters, translation_domain) }}</p>
+{%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+  <{{ _prefix }}field-description>{{ translation_domain is same as(false) ? help : help|trans(help_translation_parameters, translation_domain) }}</{{ _prefix }}field-description>
 {%- endif -%}
 {%- endblock %}
 
