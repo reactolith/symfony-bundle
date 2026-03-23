@@ -51,7 +51,7 @@
   {%- if disabled %} disabled{% endif -%}
   {%- if attr.placeholder is defined %} placeholder="{{ attr.placeholder }}"{% endif -%}
   {%- if attr.class is defined %} class="{{ attr.class }}"{% endif -%}
-  {%- for key, val in attr %}{% if key not in ['placeholder', 'class'] %} {{ key }}="{{ val }}"{% endif %}{% endfor -%}
+  {%- for key, val in attr %}{% if key not in ['placeholder', 'class'] %} {{ key|re_attr_key }}="{{ val }}"{% endif %}{% endfor -%}
 ></{{ _prefix }}input>
 {%- endif -%}
 {%- endblock %}
@@ -64,8 +64,24 @@
   {%- if disabled %} disabled{% endif -%}
   {%- if attr.placeholder is defined %} placeholder="{{ attr.placeholder }}"{% endif -%}
   {%- if attr.rows is defined %} rows="{{ attr.rows }}"{% endif -%}
-  {%- for key, val in attr %}{% if key not in ['placeholder', 'rows'] %} {{ key }}="{{ val }}"{% endif %}{% endfor -%}
+  {%- for key, val in attr %}{% if key not in ['placeholder', 'rows'] %} {{ key|re_attr_key }}="{{ val }}"{% endif %}{% endfor -%}
 ></{{ _prefix }}textarea>
+{%- endblock %}
+
+{%- block checkbox_row -%}
+{%- set _prefix = reactolith_tag_prefix|default('ui-') -%}
+<div class="flex items-center gap-3">
+  {{ form_widget(form) }}
+  {%- if label is not same as(false) %}
+  <{{ _prefix }}label for="{{ id }}"
+    {%- if label_attr is defined %}{% for key, val in label_attr %} {{ key }}="{{ val }}"{% endfor %}{% endif -%}
+  >
+    {{- label is not same as(null) ? (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) : name|humanize -}}
+  </{{ _prefix }}label>
+  {%- endif %}
+  {{ form_help(form) }}
+  {{ form_errors(form) }}
+</div>
 {%- endblock %}
 
 {%- block checkbox_widget -%}
@@ -75,7 +91,7 @@
   {%- if checked %} json-checked="true"{% else %} json-checked="false"{% endif -%}
   {%- if required %} required{% endif -%}
   {%- if disabled %} disabled{% endif -%}
-  {%- for key, val in attr %} {{ key }}="{{ val }}"{% endfor -%}
+  {%- for key, val in attr %} {{ key|re_attr_key }}="{{ val }}"{% endfor -%}
 ></{{ _prefix }}checkbox>
 {%- endblock %}
 
@@ -118,9 +134,9 @@
   {# Checkbox group #}
   <div id="{{ id }}" class="space-y-2">
     {%- for child in form %}
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center gap-3">
         {{ form_widget(child) }}
-        {{ form_label(child) }}
+        <{{ _prefix }}label for="{{ child.vars.id }}">{{ translation_domain is same as(false) ? child.vars.label : child.vars.label|trans({}, translation_domain) }}</{{ _prefix }}label>
       </div>
     {%- endfor %}
   </div>
@@ -146,7 +162,7 @@
 <{{ _prefix }}button type="{{ type|default('button') }}" id="{{ id }}" name="{{ full_name }}"
   {%- if disabled %} disabled{% endif -%}
   {%- if attr.variant is defined %} variant="{{ attr.variant }}"{% endif -%}
-  {%- for key, val in attr %}{% if key != 'variant' %} {{ key }}="{{ val }}"{% endif %}{% endfor -%}
+  {%- for key, val in attr %}{% if key != 'variant' %} {{ key|re_attr_key }}="{{ val }}"{% endif %}{% endfor -%}
 >{{ label is not same as(null) ? (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain)) : name|humanize }}</{{ _prefix }}button>
 {%- endblock %}
 
@@ -176,7 +192,7 @@
   {%- if checked %} json-checked="true"{% else %} json-checked="false"{% endif -%}
   {%- if required %} required{% endif -%}
   {%- if disabled %} disabled{% endif -%}
-  {%- for key, val in attr %} {{ key }}="{{ val }}"{% endfor -%}
+  {%- for key, val in attr %} {{ key|re_attr_key }}="{{ val }}"{% endfor -%}
 ></{{ _prefix }}switch>
 {%- endblock %}
 

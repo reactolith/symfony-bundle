@@ -115,8 +115,9 @@ class ReactolithTwigExtensionTest extends TestCase
         $filters = $this->extension->getFilters();
         $functions = $this->extension->getFunctions();
 
-        $this->assertCount(1, $filters);
+        $this->assertCount(2, $filters);
         $this->assertSame('re_attrs', $filters[0]->getName());
+        $this->assertSame('re_attr_key', $filters[1]->getName());
 
         $this->assertCount(1, $functions);
         $this->assertSame('re_attrs', $functions[0]->getName());
